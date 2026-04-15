@@ -1,0 +1,2 @@
+418:        ->orderByDesc(DB::raw('COALESCE(reports.submitted_at, reports.created_at)'))
+424:            'reports.submitted_at',

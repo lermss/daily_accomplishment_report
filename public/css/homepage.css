@@ -1,0 +1,582 @@
+/* =========================================================
+   Legacy Homepage Theme
+   ---------------------------------------------------------
+   This file appears to support an older homepage layout with:
+   - top navigation
+   - hero section
+   - feature cards
+   - notification dropdown
+
+   Safe editing guide:
+   - Layout width: update `.page-shell`, `.hero-section`, `.feature-grid`
+   - Spacing: update padding / margin variables below
+   - Typography: update font-size variables
+   - Colors: use the variables in `:root`
+   - Shape: adjust border-radius values
+   ========================================================= */
+
+/* =========================================================
+   Theme Variables
+   ========================================================= */
+:root {
+    /* Background and surfaces */
+    --homepage-page-bg: #ededed;
+    --homepage-surface: #f7f7f7;
+    --homepage-surface-card: #ffffff;
+    --homepage-surface-accent: #edf1f5;
+    --homepage-surface-strong: #d6e0ea;
+
+    /* Brand colors */
+    --homepage-nav-blue: #0a3f72;
+    --homepage-nav-blue-dark: #0c4f88;
+    --homepage-accent-blue: #0c4c7f;
+
+    /* Text colors */
+    --homepage-text-strong: #25282d;
+    --homepage-text-body: #2d2d2d;
+    --homepage-text-muted: #686d73;
+    --homepage-text-soft: #50565d;
+    --homepage-line-dark: #242424;
+
+    /* Borders and lines */
+    --homepage-card-border: #d8dce2;
+
+    /* Shadows */
+    --homepage-shadow-sm: 0 18px 38px rgba(19, 71, 116, 0.24);
+    --homepage-shadow-md: 0 18px 40px rgba(18, 40, 64, 0.22);
+
+    /* Radius */
+    --homepage-radius-sm: 5px;
+    --homepage-radius-md: 10px;
+    --homepage-radius-lg: 14px;
+    --homepage-radius-xl: 28px;
+    --homepage-radius-round: 999px;
+
+    /* Spacing */
+    --homepage-space-xs: 8px;
+    --homepage-space-sm: 10px;
+    --homepage-space-md: 12px;
+    --homepage-space-lg: 14px;
+    --homepage-space-xl: 18px;
+    --homepage-space-2xl: 20px;
+    --homepage-space-3xl: 24px;
+    --homepage-space-4xl: 28px;
+    --homepage-space-5xl: 34px;
+    --homepage-space-6xl: 38px;
+    --homepage-space-7xl: 42px;
+
+    /* Typography */
+    --homepage-font-xs: 0.64rem;
+    --homepage-font-sm: 0.72rem;
+    --homepage-font-md: 0.76rem;
+    --homepage-font-lg: 0.78rem;
+    --homepage-font-xl: 0.82rem;
+    --homepage-font-2xl: 0.85rem;
+    --homepage-font-3xl: 0.88rem;
+    --homepage-font-4xl: 0.98rem;
+}
+
+/* =========================================================
+   Global Reset
+   ---------------------------------------------------------
+   The old file had duplicated resets and invalid widths.
+   This keeps the safe reset only.
+   ========================================================= */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    min-height: 100%;
+    font-family: "Poppins", sans-serif;
+    background: var(--homepage-page-bg);
+    color: var(--homepage-text-strong);
+}
+
+body {
+    min-height: 100vh;
+    background: var(--homepage-page-bg);
+    color: var(--homepage-text-body);
+}
+
+/* =========================================================
+   Shared Layout Helpers
+   ---------------------------------------------------------
+   These grouped selectors only control alignment / spacing.
+   ========================================================= */
+.app-topbar,
+.brand-group,
+.nav-links,
+.topbar-actions,
+.action-icons,
+.table-toolbar,
+.section-header,
+.section-subcopy,
+.stat-number-row,
+.confirm-actions,
+.modal-actions {
+    display: flex;
+    align-items: center;
+}
+
+.brand-group,
+.topbar-actions,
+.action-icons,
+.section-header,
+.section-subcopy,
+.confirm-actions,
+.modal-actions {
+    gap: var(--homepage-space-sm);
+}
+
+/* =========================================================
+   Page Shell
+   ---------------------------------------------------------
+   Adjust overall width and bottom spacing here.
+   ========================================================= */
+.page-shell {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.page-label {
+    display: none;
+}
+
+.home-card {
+    min-height: 50vh;
+    padding: 0 0 34px;
+    background: var(--homepage-surface);
+}
+
+/* =========================================================
+   Top Navigation
+   ---------------------------------------------------------
+   Update nav height, horizontal padding, and link styles here.
+   ========================================================= */
+.app-topbar {
+    justify-content: space-between;
+    gap: var(--homepage-space-3xl);
+    padding: 11px 18px;
+    background: linear-gradient(90deg, var(--homepage-nav-blue), var(--homepage-nav-blue-dark));
+}
+
+.brand-logo {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    filter:
+        drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
+        drop-shadow(0 0 12px rgba(255, 255, 255, 0.65));
+}
+
+.nav-links {
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: var(--homepage-font-2xl);
+    font-weight: 400;
+}
+
+.nav-links a.is-active {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--homepage-radius-round);
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.icon-button svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* =========================================================
+   Hero Section
+   ---------------------------------------------------------
+   Adjust content/image column widths, hero padding, and
+   text scale here.
+   ========================================================= */
+.hero-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+    gap: var(--homepage-space-7xl);
+    align-items: center;
+    padding: 28px 38px 20px;
+}
+
+.hero-copy {
+    display: grid;
+    grid-template-columns: 3px minmax(0, 1fr);
+    gap: var(--homepage-space-xl);
+    align-items: start;
+    max-width: 520px;
+    padding-top: 26px;
+}
+
+.headline-rule {
+    width: 3px;
+    min-height: 132px;
+    background: var(--homepage-line-dark);
+}
+
+.hero-copy h1 {
+    margin-bottom: var(--homepage-space-xl);
+    font-size: clamp(1.25rem, 3vw, 3.3rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+}
+
+.hero-copy p {
+    max-width: 410px;
+    font-size: var(--homepage-font-3xl);
+    line-height: 1.8;
+    color: var(--homepage-text-muted);
+}
+
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 124px;
+    margin-top: var(--homepage-space-5xl);
+    padding: 12px 26px;
+    border-radius: var(--homepage-radius-round);
+    background: var(--homepage-accent-blue);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: var(--homepage-font-2xl);
+    font-weight: 500;
+}
+
+/* =========================================================
+   Hero Visual
+   ---------------------------------------------------------
+   Change image size, decorative ring sizes, and frame radius
+   here.
+   ========================================================= */
+.hero-visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 340px;
+}
+
+.ring {
+    position: absolute;
+    border: 40px solid #e3ebf5;
+    border-bottom: 0;
+    border-radius: 999px 999px 0 0;
+    opacity: 1;
+}
+
+.ring-one {
+    top: -10px;
+    right: -4px;
+    width: 360px;
+    height: 186px;
+}
+
+.ring-two {
+    top: 56px;
+    right: 54px;
+    width: 250px;
+    height: 128px;
+}
+
+.hero-visual::before {
+    content: "";
+    position: absolute;
+    top: 82px;
+    left: -8px;
+    width: 20px;
+    height: 120px;
+    border-radius: var(--homepage-radius-round);
+    background: linear-gradient(180deg, rgba(210, 220, 230, 0.8), rgba(210, 220, 230, 0.1));
+}
+
+.photo-frame {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 292px);
+    aspect-ratio: 1.48 / 1;
+    overflow: hidden;
+    border-radius: var(--homepage-radius-sm);
+    box-shadow:
+        var(--homepage-shadow-sm),
+        0 0 0 1px rgba(9, 55, 95, 0.08);
+}
+
+.photo-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(14, 68, 114, 0.14), rgba(8, 47, 78, 0.34));
+}
+
+.photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.shadow-bar {
+    position: absolute;
+    z-index: 0;
+    bottom: 20px;
+    width: 92%;
+    height: 12px;
+    border-radius: var(--homepage-radius-round);
+    background: #e5e7ea;
+    filter: blur(1px);
+}
+
+/* =========================================================
+   Feature Cards
+   ---------------------------------------------------------
+   Adjust card width, min-height, padding, and text size here.
+   ========================================================= */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--homepage-space-xl);
+    padding: 16px 38px 0;
+}
+
+.feature-card {
+    min-height: 200px;
+    padding: 14px 14px 16px;
+    border: 1px solid var(--homepage-card-border);
+    background: var(--homepage-surface-card);
+}
+
+.feature-card-accent {
+    background: var(--homepage-surface-accent);
+}
+
+.feature-card-highlight {
+    background: var(--homepage-surface-strong);
+}
+
+.feature-card h2 {
+    margin-bottom: 12px;
+    font-size: var(--homepage-font-4xl);
+    line-height: 1.2;
+}
+
+.feature-card p {
+    font-size: var(--homepage-font-sm);
+    line-height: 1.6;
+    color: var(--homepage-text-soft);
+}
+
+/* =========================================================
+   Notification Dropdown
+   ---------------------------------------------------------
+   Adjust dropdown width, badge size, and panel spacing here.
+   ========================================================= */
+.notification-menu {
+    position: relative;
+}
+
+.notification-toggle {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: var(--homepage-radius-round);
+    background: #ffffff;
+    color: var(--homepage-nav-blue);
+    font-size: var(--homepage-font-xs);
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(10, 63, 114, 0.22);
+}
+
+.notification-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 30;
+    width: min(360px, 82vw);
+    padding: 12px;
+    border-radius: var(--homepage-radius-lg);
+    background: #ffffff;
+    color: #243447;
+    box-shadow: var(--homepage-shadow-md);
+}
+
+.notification-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--homepage-space-lg);
+    margin-bottom: var(--homepage-space-sm);
+}
+
+.notification-panel-header strong {
+    font-size: 0.9rem;
+}
+
+.notification-panel-header a {
+    color: var(--homepage-nav-blue-dark);
+    font-size: var(--homepage-font-lg);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.notification-list {
+    display: grid;
+    gap: var(--homepage-space-xs);
+}
+
+.notification-item {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    gap: var(--homepage-space-sm);
+    padding: 10px;
+    border-radius: var(--homepage-radius-md);
+    background: #f5f8fb;
+    color: inherit;
+    text-decoration: none;
+}
+
+.notification-item:hover {
+    background: #edf3f8;
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: var(--homepage-radius-round);
+    background: var(--homepage-nav-blue-dark);
+    box-shadow: 0 0 0 4px rgba(12, 79, 136, 0.12);
+}
+
+.notification-copy {
+    display: grid;
+    gap: 2px;
+}
+
+.notification-copy strong,
+.notification-copy span,
+.notification-copy small {
+    display: block;
+}
+
+.notification-copy strong {
+    font-size: var(--homepage-font-lg);
+}
+
+.notification-copy span {
+    font-size: var(--homepage-font-md);
+    line-height: 1.4;
+}
+
+.notification-copy small,
+.notification-empty {
+    font-size: var(--homepage-font-sm);
+    color: var(--homepage-text-subtle);
+}
+
+.notification-empty {
+    margin: 6px 0 2px;
+}
+
+/* =========================================================
+   Responsive
+   ---------------------------------------------------------
+   Keep the legacy homepage readable on smaller screens.
+   ========================================================= */
+@media (max-width: 1000px) {
+    .app-topbar {
+        flex-wrap: wrap;
+    }
+
+    .nav-links {
+        order: 3;
+        width: 100%;
+    }
+
+    .hero-section {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .page-shell {
+        padding-inline: 0;
+    }
+
+    .home-card {
+        padding: 0 0 20px;
+    }
+
+    .hero-copy {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding-top: 8px;
+    }
+
+    .hero-section,
+    .feature-grid {
+        padding-inline: 16px;
+    }
+
+    .headline-rule {
+        width: 72px;
+        min-height: 3px;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ring-one {
+        right: 0;
+        width: 250px;
+        height: 130px;
+    }
+
+    .ring-two {
+        right: 26px;
+        width: 170px;
+        height: 90px;
+    }
+}

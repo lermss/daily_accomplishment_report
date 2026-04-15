@@ -1,0 +1,343 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  color: #fff;
+  background: linear-gradient(135deg, #041533 0%, #083d78 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 140px
+  );
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.signin-page {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(20px, 3vw, 36px) clamp(16px, 2.4vw, 28px) 24px;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(2, 12, 36, 0.16) 0%, rgba(8, 61, 120, 0.05) 100%);
+}
+
+.signin-layout {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  min-height: calc(100vh - 96px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) 1px minmax(320px, 0.95fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 42px);
+}
+
+.brand-panel,
+.signin-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.brand-panel {
+  align-items: center;
+  text-align: center;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(14px, 2vw, 26px);
+  margin-bottom: 22px;
+}
+
+.logo-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-glow img {
+  width: clamp(74px, 8vw, 108px);
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));
+}
+
+.brand-title {
+  max-width: 620px;
+  font-size: clamp(1.55rem, 2.7vw, 2.65rem);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.brand-divider {
+  width: 1px;
+  height: min(300px, 42vh);
+  justify-self: center;
+  background: rgba(194, 190, 190, 0.75);
+}
+
+.signin-panel {
+  align-items: flex-start;
+}
+
+.signin-shell {
+  width: min(100%, 520px);
+  padding: clamp(24px, 3vw, 36px);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 28px 60px rgba(2, 10, 28, 0.24);
+  backdrop-filter: blur(16px);
+}
+
+.signin-copy {
+  margin-bottom: 20px;
+}
+
+.signin-kicker {
+  margin-bottom: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(220, 233, 248, 0.9);
+}
+
+.signin-copy h2 {
+  font-size: clamp(1.9rem, 2.8vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.signin-subcopy {
+  max-width: 34ch;
+  margin-bottom: 18px;
+  color: rgba(234, 243, 255, 0.86);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.feedback {
+  margin-bottom: 12px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.feedback-success {
+  color: #d9f99d;
+}
+
+.feedback-error {
+  color: #fecaca;
+}
+
+.signin-form {
+  width: 100%;
+}
+
+.input-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: rgba(240, 246, 255, 0.92);
+}
+
+.input-wrap {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.email-input {
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid rgba(12, 39, 77, 0.22);
+  border-radius: 14px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #163556;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 22px rgba(7, 33, 59, 0.12);
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.email-input::placeholder {
+  color: #6b84a0;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: rgba(10, 79, 150, 0.72);
+  box-shadow: 0 0 0 3px rgba(83, 152, 255, 0.14), 0 12px 24px rgba(7, 33, 59, 0.16);
+}
+
+.otp-button {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f4f8ff 0%, #d8e7ff 100%);
+  color: #0a3769;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  box-shadow: 0 14px 28px rgba(7, 33, 59, 0.16);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.otp-button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #e3eeff 100%);
+  box-shadow: 0 18px 32px rgba(7, 33, 59, 0.2);
+  transform: translateY(-1px);
+}
+
+.otp-button:active {
+  transform: translateY(0);
+}
+
+.signin-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+@media (max-width: 980px) {
+  .signin-layout {
+    min-height: auto;
+    padding: 20px 0;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .brand-divider {
+    display: none;
+  }
+
+  .brand-panel,
+  .signin-panel {
+    align-items: center;
+    text-align: center;
+  }
+
+  .signin-shell {
+    width: min(560px, 100%);
+  }
+
+  .signin-subcopy {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .signin-page {
+    padding-inline: 14px;
+    padding-top: 18px;
+  }
+
+  .logo-row {
+    margin-bottom: 18px;
+  }
+
+  .brand-title br {
+    display: none;
+  }
+
+  .signin-shell {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .signin-copy {
+    margin-bottom: 18px;
+  }
+
+  .signin-subcopy {
+    font-size: 0.9rem;
+  }
+
+  .email-input,
+  .otp-button {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 420px) {
+  .signin-layout {
+    gap: 22px;
+  }
+
+  .logo-row {
+    gap: 12px;
+  }
+
+  .logo-glow img {
+    width: 68px;
+  }
+
+  .brand-title {
+    font-size: 1.35rem;
+  }
+
+  .signin-copy h2 {
+    font-size: 1.75rem;
+  }
+
+  .signin-shell {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .input-label,
+  .feedback,
+  .signin-footer {
+    font-size: 0.78rem;
+  }
+
+  .email-input,
+  .otp-button {
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,1146 @@
+/* =========================================================
+   Admin Reports Base Theme
+   ---------------------------------------------------------
+   This stylesheet powers the admin/staff reports UI shell,
+   table surfaces, action buttons, modal panels, and preview.
+
+   Beginner-friendly tuning guide:
+   - Width / layout: update grid columns, widths, gaps
+   - Height / spacing: adjust padding, margin, min-height
+   - Typography: update font-size, font-weight, line-height
+   - Colors: edit the CSS variables below
+   - Shape: change border-radius values
+   ========================================================= */
+
+:root {
+    /* -----------------------------------------------------
+       Core Colors
+       ----------------------------------------------------- */
+    --reports-bg-top: #f6f8fb;
+    --reports-bg-bottom: #eef3f8;
+    --reports-surface: #ffffff;
+    --reports-surface-soft: #f7fafc;
+    --reports-surface-muted: #f8fbff;
+    --reports-panel-surface: rgba(255, 255, 255, 0.94);
+
+    --reports-text-strong: #17324b;
+    --reports-text-body: #334155;
+    --reports-text-muted: #64748b;
+    --reports-text-subtle: #6b7280;
+    --reports-text-soft: #5e6f80;
+    --reports-text-accent: #0a4c83;
+
+    --reports-border-soft: #d6e0eb;
+    --reports-border-table: #e5edf5;
+    --reports-border-preview: #dfe8f1;
+    --reports-border-card: rgba(13, 55, 96, 0.08);
+
+    --reports-head-top: #e7eef6;
+    --reports-head-bottom: #dde7f0;
+    --reports-hover-row: #f8fbfe;
+
+    --reports-primary: #0a3f72;
+    --reports-primary-strong: #0c5ea0;
+    --reports-success: #15803d;
+    --reports-warning: #b45309;
+    --reports-danger: #be123c;
+    --reports-danger-strong: #dc2626;
+
+    /* -----------------------------------------------------
+       Shadows
+       ----------------------------------------------------- */
+    --reports-shadow-sm: 0 12px 20px rgba(10, 63, 114, 0.18);
+    --reports-shadow-md: 0 16px 34px rgba(19, 42, 66, 0.08);
+    --reports-shadow-lg: 0 22px 40px rgba(18, 40, 64, 0.08);
+    --reports-shadow-xl: 0 24px 46px rgba(15, 23, 42, 0.12);
+    --reports-shadow-modal: 0 28px 65px rgba(15, 23, 42, 0.28);
+
+    /* -----------------------------------------------------
+       Radius
+       ----------------------------------------------------- */
+    --reports-radius-xs: 10px;
+    --reports-radius-sm: 12px;
+    --reports-radius-md: 14px;
+    --reports-radius-lg: 16px;
+    --reports-radius-xl: 18px;
+    --reports-radius-2xl: 20px;
+    --reports-radius-3xl: 22px;
+    --reports-radius-4xl: 24px;
+    --reports-radius-round: 999px;
+
+    /* -----------------------------------------------------
+       Spacing
+       ----------------------------------------------------- */
+    --reports-space-xs: 6px;
+    --reports-space-sm: 8px;
+    --reports-space-md: 10px;
+    --reports-space-lg: 12px;
+    --reports-space-xl: 14px;
+    --reports-space-2xl: 16px;
+    --reports-space-3xl: 18px;
+    --reports-space-4xl: 20px;
+    --reports-space-5xl: 22px;
+    --reports-space-6xl: 24px;
+
+    /* -----------------------------------------------------
+       Typography
+       ----------------------------------------------------- */
+    --reports-font-xs: 0.72rem;
+    --reports-font-sm: 0.76rem;
+    --reports-font-md: 0.78rem;
+    --reports-font-lg: 0.82rem;
+    --reports-font-xl: 0.84rem;
+    --reports-font-2xl: 0.88rem;
+    --reports-font-hero: 1.85rem;
+    --reports-font-number: 2.2rem;
+
+    /* -----------------------------------------------------
+       Shared Dimensions
+       ----------------------------------------------------- */
+    --reports-content-padding: 32px 34px 42px;
+    --reports-search-width: min(420px, 100%);
+    --reports-search-height: 48px;
+    --reports-select-height: 48px;
+    --reports-action-size: 36px;
+    --reports-touch-target: 44px;
+    --reports-summary-icon-size: 52px;
+}
+
+/* =========================================================
+   Layout
+   ---------------------------------------------------------
+   Adjust page spacing, container gaps, and flex wrapping
+   here when you want the layout to breathe more or less.
+   ========================================================= */
+.admin-content {
+    padding: var(--reports-content-padding);
+    background: linear-gradient(180deg, var(--reports-bg-top) 0%, var(--reports-bg-bottom) 100%);
+}
+
+.page-intro,
+.report-filters-row,
+.filters-left,
+.name-cell,
+.action-stack {
+    display: flex;
+    align-items: center;
+}
+
+.page-intro {
+    justify-content: space-between;
+    gap: var(--reports-space-3xl);
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.table-toolbar {
+    display: grid;
+    gap: var(--reports-space-2xl);
+}
+
+.report-filters-row {
+    justify-content: space-between;
+    gap: var(--reports-space-2xl);
+    flex-wrap: wrap;
+}
+
+.filters-left {
+    flex: 1;
+    gap: var(--reports-space-xl);
+    flex-wrap: wrap;
+}
+
+.summary-grid {
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* =========================================================
+   Typography
+   ---------------------------------------------------------
+   Change font sizes, label styling, and text colors here.
+   ========================================================= */
+.page-intro h1 {
+    margin-bottom: var(--reports-space-xs);
+    font-size: var(--reports-font-hero);
+    color: var(--reports-text-strong);
+}
+
+.page-intro p,
+.monitor-label,
+.results-summary,
+.status-message,
+.modal-note,
+.review-feedback {
+    font-size: var(--reports-font-xl);
+    line-height: 1.6;
+    color: var(--reports-text-soft);
+}
+
+.summary-label {
+    display: block;
+    margin-bottom: 14px;
+    font-size: var(--reports-font-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7c8e;
+}
+
+.summary-value-row strong {
+    font-size: var(--reports-font-number);
+    color: #18324b;
+}
+
+.summary-value-row span,
+.summary-meta {
+    font-size: var(--reports-font-md);
+    color: #6c7b89;
+}
+
+.name-copy strong,
+.file-cell strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--reports-font-2xl);
+    color: var(--reports-text-strong);
+}
+
+.name-copy span,
+.file-cell small {
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--reports-text-subtle);
+}
+
+.report-title {
+    font-weight: 600;
+    color: var(--reports-text-strong);
+    text-decoration: none;
+}
+
+.report-title:hover {
+    color: var(--reports-primary-strong);
+}
+
+.review-note {
+    margin-top: var(--reports-space-sm);
+    font-size: 12px;
+    line-height: 1.4;
+    color: #92400e;
+    white-space: pre-wrap;
+}
+
+/* =========================================================
+   Pills, Messages, and Small Components
+   ---------------------------------------------------------
+   Good place to tweak pill radius, label padding, and
+   status colors without touching the layout.
+   ========================================================= */
+.page-pill {
+    display: inline-flex;
+    gap: var(--reports-space-sm);
+    padding: 10px 14px;
+    border-radius: var(--reports-radius-round);
+    background: rgba(10, 63, 114, 0.08);
+    color: var(--reports-text-accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.status-message {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid #b4e2c3;
+    border-radius: var(--reports-radius-lg);
+    background: #e8f7ef;
+    color: #146c43;
+}
+
+.status-pill,
+.modal-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 112px;
+    padding: 8px 14px;
+    border-radius: var(--reports-radius-round);
+    font-size: var(--reports-font-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.status-approved {
+    background: #dcfce7;
+    color: var(--reports-success);
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: var(--reports-warning);
+}
+
+.status-revision {
+    background: #ffe4e6;
+    color: var(--reports-danger);
+}
+
+.status-default {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.empty-state {
+    padding: 28px 18px;
+    font-size: var(--reports-font-xl);
+}
+
+.text-center.py-5 h5 {
+    margin-bottom: var(--reports-space-sm);
+    font-size: 1.1rem;
+    color: var(--reports-text-strong);
+}
+
+.text-center.py-5 p {
+    font-size: var(--reports-font-lg);
+    color: var(--reports-text-subtle);
+}
+
+/* =========================================================
+   Summary Cards
+   ---------------------------------------------------------
+   Adjust card padding, border radius, and shadow here.
+   ========================================================= */
+.summary-card {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 18px;
+    border: 1px solid var(--reports-border-card);
+    border-radius: var(--reports-radius-xl);
+    background: linear-gradient(180deg, var(--reports-surface) 0%, var(--reports-surface-soft) 100%);
+    box-shadow: var(--reports-shadow-md);
+}
+
+.summary-card:hover,
+.summary-card.is-active {
+    transform: translateY(-6px);
+}
+
+.summary-card.is-active {
+    border-color: rgba(10, 76, 131, 0.22);
+    box-shadow: 0 20px 38px rgba(10, 76, 131, 0.16);
+}
+
+.summary-card-blue {
+    width: 1045px;
+}
+.summary-card-violet {
+    color: #6f58d9;
+   
+}
+.summary-card-green {
+    color: #1f9c5e;
+}
+
+.summary-card-orange {
+    color: #d48811;
+}
+
+.summary-card-red {
+    color: #d75f3b;
+}
+
+.summary-icon {
+    width: var(--reports-summary-icon-size);
+    height: var(--reports-summary-icon-size);
+    border-radius: var(--reports-radius-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 12px 22px rgba(17, 24, 39, 0.08);
+}
+
+.summary-icon-violet {
+    background: rgba(111, 88, 217, 0.12);
+}
+
+.summary-icon-green {
+    background: rgba(31, 156, 94, 0.12);
+}
+
+.summary-icon-orange {
+    background: rgba(212, 136, 17, 0.12);
+}
+
+.summary-icon-red {
+    background: rgba(215, 95, 59, 0.12);
+}
+
+.summary-icon svg,
+.action-button svg,
+.icon-action svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* =========================================================
+   Panels, Filters, and Search Controls
+   ---------------------------------------------------------
+   Update width, height, and spacing for cards, search bars,
+   and select inputs here.
+   ========================================================= */
+.table-panel {
+    padding: 24px;
+    border: 1px solid rgba(209, 220, 232, 0.8);
+    border-radius: var(--reports-radius-4xl);
+    background: var(--reports-panel-surface);
+    box-shadow: var(--reports-shadow-lg);
+}
+
+.date-filter-card {
+    border-radius: var(--reports-radius-2xl);
+}
+
+.date-filter-card,
+.report-filters-row {
+    padding: 18px 20px;
+    border-radius: var(--reports-radius-lg);
+    background: var(--reports-surface);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.report-search-form {
+    width: var(--reports-search-width);
+    min-height: var(--reports-search-height);
+    border-radius: var(--reports-radius-xl);
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+    height: var(--reports-search-height);
+    padding: 12px 16px;
+    padding-right: 80px;
+    border: 1px solid var(--reports-border-soft);
+    border-radius: var(--reports-radius-xl);
+    background: linear-gradient(180deg, var(--reports-surface) 0%, #f5f8fb 100%);
+    font: inherit;
+    font-size: var(--reports-font-lg);
+    color: #28435f;
+    outline: none;
+}
+
+.status-select {
+    min-width: 180px;
+    height: var(--reports-select-height);
+    padding: 0 14px;
+    border: 1px solid var(--reports-border-soft);
+    border-radius: var(--reports-radius-md);
+    background: linear-gradient(180deg, var(--reports-surface) 0%, #f5f8fb 100%);
+    font: inherit;
+    font-size: var(--reports-font-lg);
+    color: #28435f;
+    outline: none;
+}
+
+.status-select:focus,
+.review-comment:focus,
+.search-input:focus,
+.form-control:focus {
+    border-color: var(--reports-primary-strong);
+    box-shadow: 0 0 0 4px rgba(12, 94, 160, 0.12);
+}
+
+.search-clear,
+.search-submit {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.search-clear {
+    right: 48px;
+    color: #a0aec0;
+    transition: color 0.2s ease;
+}
+
+.search-clear:hover {
+    color: var(--reports-text-muted);
+}
+
+.search-submit {
+    right: var(--reports-space-sm);
+    color: var(--reports-text-accent);
+    transition: transform 0.2s ease;
+}
+
+.search-submit:hover {
+    transform: scale(1.08);
+}
+
+.search-clear svg,
+.search-submit svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* =========================================================
+   Table
+   ---------------------------------------------------------
+   This section controls table width, cell padding, and
+   hover states.
+   ========================================================= */
+.table-wrap {
+    margin-top: 20px;
+    overflow: hidden;
+    border: 1px solid var(--reports-border-table);
+    border-radius: var(--reports-radius-xl);
+    background: var(--reports-surface);
+}
+
+table {
+    font-size: 0.79rem;
+    
+}
+
+thead th {
+    padding: 14px 16px;
+    background: linear-gradient(180deg, var(--reports-head-top) 0%, var(--reports-head-bottom) 100%);
+    color: #344b63;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    width: 500px;
+}
+
+tbody td {
+    padding: 16px;
+    vertical-align: top;
+    color: var(--reports-text-body);
+}
+
+tbody tr:hover {
+    background: var(--reports-hover-row);
+}
+
+.name-cell {
+    gap: 12px;
+}
+
+/* =========================================================
+   Buttons and Actions
+   ---------------------------------------------------------
+   Adjust width, height, radius, and hover movement here.
+   ========================================================= */
+.action-stack {
+    gap: var(--reports-space-md);
+    flex-wrap: wrap;
+}
+
+.action-button,
+.icon-action,
+.modal-primary-button,
+.modal-secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-button:hover,
+.icon-action:hover {
+    transform: translateY(-1px);
+}
+
+.action-button {
+    gap: var(--reports-space-sm);
+    height: var(--reports-action-size);
+    padding: 0 14px;
+    border-radius: var(--reports-radius-round);
+    background: linear-gradient(135deg, var(--reports-primary), var(--reports-primary-strong));
+    color: #ffffff;
+    font-size: var(--reports-font-sm);
+    font-weight: 600;
+    box-shadow: var(--reports-shadow-sm);
+}
+
+.icon-action {
+    width: var(--reports-touch-target);
+    height: var(--reports-touch-target);
+    min-width: var(--reports-touch-target);
+    min-height: var(--reports-touch-target);
+    border-radius: var(--reports-radius-sm);
+    background: #eef4fb;
+    color: var(--reports-text-accent);
+    box-shadow: inset 0 0 0 1px rgba(12, 94, 160, 0.1);
+}
+
+.row-hidden {
+    display: none;
+}
+
+button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+/* `cursor: help` kept intentionally because titles are present. */
+.icon-action[title] {
+    cursor: help;
+}
+
+/* =========================================================
+   Report Preview and Custom Modal Layout
+   ---------------------------------------------------------
+   This section styles the large report review modal and
+   preview card.
+   ========================================================= */
+.report-modal[hidden],
+.review-comment[hidden],
+.modal-primary-button[hidden],
+.modal-secondary-button[hidden],
+.download-link[hidden] {
+    display: none;
+}
+
+.report-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(5px);
+}
+
+.report-modal__dialog {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    width: min(1180px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    border-radius: 28px;
+    background: #f5f8fb;
+    box-shadow: var(--reports-shadow-modal);
+}
+
+.report-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--reports-space-3xl);
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--reports-primary), var(--reports-primary-strong));
+    color: #ffffff;
+}
+
+.report-modal__close {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: var(--reports-radius-round);
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.report-modal__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 22px;
+    padding: 24px;
+    overflow: auto;
+}
+
+.report-preview-shell {
+    padding: 18px;
+    border: 1px solid var(--reports-border-soft);
+    border-radius: var(--reports-radius-3xl);
+    background: linear-gradient(180deg, #edf4fb 0%, #e2ebf4 100%);
+}
+
+.report-preview {
+    width: 100%;
+    min-height: 920px;
+    padding: 40px 38px 32px;
+    border-radius: var(--reports-radius-sm);
+    background: var(--reports-surface);
+    box-shadow: var(--reports-shadow-xl);
+}
+
+.report-preview__title {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.report-preview__title h3 {
+    margin-bottom: var(--reports-space-xs);
+    font-size: 1.28rem;
+    color: var(--reports-text-strong);
+}
+
+.report-preview__title p {
+    font-size: var(--reports-font-lg);
+    color: var(--reports-text-muted);
+}
+
+.report-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--reports-space-lg);
+    margin-bottom: 24px;
+}
+
+.meta-card,
+.sidebar-card {
+    padding: 18px;
+    border: 1px solid #dde7f0;
+    border-radius: var(--reports-radius-xl);
+    background: var(--reports-surface);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+.meta-card span {
+    display: block;
+    margin-bottom: var(--reports-space-xs);
+    font-size: var(--reports-font-xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64809a;
+}
+
+.meta-card strong,
+.sidebar-card h3,
+.prepared-by strong {
+    color: var(--reports-text-strong);
+}
+
+.preview-table {
+    width: 100%;
+    margin-bottom: 28px;
+    border-collapse: collapse;
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 12px 10px;
+    border: 1px solid var(--reports-border-preview);
+    vertical-align: top;
+    text-align: left;
+    font-size: var(--reports-font-md);
+    color: var(--reports-text-body);
+}
+
+.preview-table th {
+    background: #eef4fb;
+    color: var(--reports-text-strong);
+    font-weight: 700;
+}
+
+.prepared-by {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid #dbe4ed;
+}
+
+.signature-box {
+    display: flex;
+    align-items: center;
+    min-height: 90px;
+    margin-bottom: var(--reports-space-md);
+}
+
+.signature-box img {
+    max-width: 200px;
+    max-height: 90px;
+    object-fit: contain;
+}
+
+.signature-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 72px;
+    border: 1px dashed #b8c5d3;
+    border-radius: var(--reports-radius-xs);
+    background: var(--reports-surface-muted);
+    color: #7b8794;
+    font-size: var(--reports-font-sm);
+}
+
+.prepared-by span {
+    font-size: var(--reports-font-md);
+    color: var(--reports-text-muted);
+}
+
+.review-sidebar {
+    display: grid;
+    gap: var(--reports-space-2xl);
+    align-content: start;
+}
+
+.sidebar-card p {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--reports-text-muted);
+}
+
+.review-options {
+    display: grid;
+    gap: var(--reports-space-lg);
+    margin-top: var(--reports-space-xl);
+}
+
+.review-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--reports-space-md);
+    padding: 14px;
+    border: 1px solid #dde7f0;
+    border-radius: var(--reports-radius-lg);
+    background: var(--reports-surface-muted);
+}
+
+.review-option strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--reports-font-lg);
+    color: var(--reports-text-strong);
+}
+
+.review-option span {
+    display: block;
+    font-size: var(--reports-font-sm);
+    line-height: 1.45;
+    color: var(--reports-text-muted);
+}
+
+.review-comment {
+    width: 100%;
+    min-height: 120px;
+    margin-top: var(--reports-space-xl);
+    padding: 12px 14px;
+    border: 1px solid #d4deea;
+    border-radius: var(--reports-radius-lg);
+    font: inherit;
+    font-size: 0.8rem;
+    resize: vertical;
+    outline: none;
+}
+
+.modal-primary-button,
+.modal-secondary-button {
+    width: 100%;
+    min-height: 46px;
+    border-radius: var(--reports-radius-md);
+    font: inherit;
+    font-size: var(--reports-font-lg);
+    font-weight: 700;
+}
+
+.modal-primary-button {
+    background: linear-gradient(135deg, var(--reports-primary), var(--reports-primary-strong));
+    color: #ffffff;
+    box-shadow: 0 14px 24px rgba(10, 63, 114, 0.2);
+}
+
+.modal-secondary-button {
+    background: #ffe4e6;
+    color: var(--reports-danger);
+}
+
+.download-link {
+    margin-top: var(--reports-space-xl);
+}
+
+.comment-panel {
+    margin-top: var(--reports-space-xl);
+    padding: 14px;
+    border: 1px solid #dce6f0;
+    border-radius: var(--reports-radius-md);
+    background: var(--reports-surface-muted);
+}
+
+.comment-panel strong {
+    display: block;
+    margin-bottom: var(--reports-space-xs);
+    font-size: var(--reports-font-md);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--reports-text-strong);
+}
+
+.comment-panel p {
+    margin: 0;
+    font-size: var(--reports-font-md);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    color: var(--reports-text-muted);
+}
+
+/* =========================================================
+   Bootstrap Modal Overrides Used By Staff Reports Page
+   ---------------------------------------------------------
+   These classes are used by the reusable Bootstrap modal
+   on the staff reports page. CSS-only cleanup is safe here.
+   ========================================================= */
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.modal-content {
+    border: 0;
+    border-radius: var(--reports-radius-xl);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border: 0;
+    border-radius: var(--reports-radius-xl) var(--reports-radius-xl) 0 0;
+    background: linear-gradient(135deg, var(--reports-primary), var(--reports-primary-strong));
+}
+
+.modal-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.btn-close {
+    width: 28px;
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-close:hover,
+.btn-close:focus {
+    background-color: rgba(255, 255, 255, 0.35);
+}
+
+.modal-body {
+    padding: 24px;
+    background: #f5f8fb;
+}
+
+.modal-footer {
+    gap: var(--reports-space-md);
+    padding: 16px 24px;
+    background: #f5f8fb;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--reports-touch-target);
+    border: 0;
+    border-radius: var(--reports-radius-sm);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--reports-primary), var(--reports-primary-strong));
+    color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(10, 63, 114, 0.2);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #d1d5db;
+}
+
+.btn-danger {
+    background: var(--reports-danger-strong);
+    color: #ffffff;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+    transform: translateY(-2px);
+}
+
+.form-control {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--reports-border-soft);
+    border-radius: var(--reports-radius-sm);
+    font-size: var(--reports-font-lg);
+    transition: all 0.2s ease;
+}
+
+.submit-spinner {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--reports-font-lg);
+}
+
+.spinner-border-sm {
+    width: 0.875rem;
+    height: 0.875rem;
+    border-width: 0.15em;
+}
+
+/* =========================================================
+   Responsive
+   ---------------------------------------------------------
+   Keep layout usable across tablet and mobile screens.
+   ========================================================= */
+@media (max-width: 1100px) {
+    .report-modal__body {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 980px) {
+    .page-intro,
+    .report-filters-row,
+    .filters-left {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-wrap {
+        margin-top: 12px;
+        overflow-x: auto;
+        border-radius: var(--reports-radius-sm);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+        font-size: 0.76rem;
+    }
+
+    thead th {
+        padding: 12px 14px;
+        font-size: 0.7rem;
+    }
+
+    tbody td {
+        padding: 12px 14px;
+    }
+
+    .report-title {
+        font-size: var(--reports-font-lg);
+    }
+
+    .status-pill {
+        min-width: 100px;
+        padding: 6px 12px;
+        font-size: 0.68rem;
+    }
+
+    .table-actions {
+        gap: var(--reports-space-xs);
+    }
+
+    .action-button {
+        min-height: 40px;
+        padding-inline: 12px;
+    }
+
+    .icon-action {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .modal-dialog-centered {
+        min-height: calc(100% - 0.5rem);
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-inline: 18px;
+    }
+}
+
+@media (max-width: 720px) {
+    .admin-content {
+        padding: 24px 16px 30px;
+    }
+
+    .table-panel,
+    .date-filter-card,
+    .meta-card,
+    .sidebar-card {
+        padding: 16px;
+    }
+
+    .report-preview {
+        padding: 26px 18px 22px;
+    }
+
+    .report-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-modal {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .report-search-form,
+    .status-select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    table {
+        min-width: 540px;
+    }
+
+    thead th,
+    tbody td {
+        padding-inline: 12px;
+    }
+
+    .status-pill,
+    .modal-status-pill {
+        min-width: 92px;
+    }
+
+    .modal-title {
+        font-size: 0.88rem;
+    }
+}

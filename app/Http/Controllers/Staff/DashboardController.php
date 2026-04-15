@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers\Staff;
+
+use App\Http\Controllers\Controller;
+use App\Models\Report;
+use App\Services\AuthFlowService;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class DashboardController extends Controller
+{
+    public function __construct(
+        private readonly AuthFlowService $authFlowService,
+    ) {
+    }
+
+    public function index(Request $request): RedirectResponse
+    {
+        $user = $this->authFlowService->authenticatedUser($request);
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        return redirect()->route('dashboard.home');
+    }
+
+    public function staff(Request $request): View|RedirectResponse
+    {
+        $user = $this->authFlowService->requireAuthenticated(
+            $request,
+            fn ($user) => in_array((string) $user->role, ['staff', 'interns'], true)
+        );
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        // ✅ Get filter and search params
+        $statusFilter = $request->query('status');
+        $searchTerm = trim($request->query('search', ''));
+
+        /*
+        |--------------------------------------------------------------------------
+        | ✅ TABLE DATA (THIS ONE IS FILTERED)
+        |--------------------------------------------------------------------------
+        */
+        $reportsQuery = Report::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [
+                Report::STATUS_PENDING,
+                Report::STATUS_APPROVED,
+                Report::STATUS_FOR_REVISION,
+            ])
+            ->with(['entries' => fn ($q) => $q->orderBy('id')]);
+
+        // Apply status filter ONLY to table
+        if ($statusFilter && $statusFilter !== 'all') {
+            $reportsQuery->where('status', $statusFilter);
+        }
+
+        // Apply search ONLY to table
+        if ($searchTerm) {
+            $reportsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('file_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('status', 'like', '%' . $searchTerm . '%')
+                  ->orWhereRaw(
+                      "DATE_FORMAT(COALESCE(submitted_at, created_at), '%m/%d/%Y') LIKE ?",
+                      ['%' . $searchTerm . '%']
+                  );
+            });
+        }
+
+        $reports = $reportsQuery->latest()->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ✅ SUMMARY COUNTS (ALWAYS GLOBAL - NOT FILTERED)
+        |--------------------------------------------------------------------------
+        */
+        $baseCountQuery = Report::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [
+                Report::STATUS_PENDING,
+                Report::STATUS_APPROVED,
+                Report::STATUS_FOR_REVISION,
+            ]);
+
+        // Clone query so each count is independent
+        $submittedCount = (clone $baseCountQuery)
+            ->whereNotNull('submitted_at')
+            ->count();
+
+        $approvedCount = (clone $baseCountQuery)
+            ->where('status', Report::STATUS_APPROVED)
+            ->count();
+
+        $pendingCount = (clone $baseCountQuery)
+            ->where('status', Report::STATUS_PENDING)
+            ->count();
+
+        $revisionCount = (clone $baseCountQuery)
+            ->where('status', Report::STATUS_FOR_REVISION)
+            ->count();
+
+        return view('staff.dashboard', compact(
+            'reports',
+            'submittedCount',
+            'approvedCount',
+            'pendingCount',
+            'revisionCount',
+            'statusFilter',
+            'searchTerm'
+        ));
+    }
+}
