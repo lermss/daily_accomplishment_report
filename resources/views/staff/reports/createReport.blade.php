@@ -26,8 +26,9 @@ body {
 }
 
 .card-a4 .header img {
-    max-height: 100px;
+    max-height: 150px;
     margin-bottom: 10px;
+    margin-top: 20px
 }
 
 /* Table */
@@ -264,7 +265,11 @@ function generateFileName() {
     let min = new Date(dates[0]);
     let max = new Date(dates[dates.length - 1]);
 
-    let name = `${min.toLocaleDateString()} - ${max.toLocaleDateString()}`;
+    let minMonth = min.toLocaleDateString('en-US', { month: 'long' });
+    let maxMonth = max.toLocaleDateString('en-US', { month: 'long' });
+    let name = minMonth === maxMonth
+        ? `${minMonth} ${min.getDate()} - ${max.getDate()}`
+        : `${minMonth} ${min.getDate()} - ${maxMonth} ${max.getDate()}`;
     document.getElementById('file_name').value = name;
     document.getElementById('file_name_display').value = name;
 }

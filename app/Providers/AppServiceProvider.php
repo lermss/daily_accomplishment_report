@@ -17,17 +17,17 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-        if (app()->environment('production') && filter_var(env('APP_FORCE_HTTPS', true), FILTER_VALIDATE_BOOLEAN)) {
-            URL::forceScheme('https');
-        }
-    }
+    // public function boot(): void
+    // {
+    //     if (app()->environment('production') && filter_var(env('APP_FORCE_HTTPS', true), FILTER_VALIDATE_BOOLEAN)) {
+    //         URL::forceScheme('https');
+    //     }
+    // }
 
     // use Illuminate\Support\Facades\URL;
 
-// public function boot()
-// {
-//     URL::forceScheme('https');
-// }
+public function boot()
+{
+    URL::forceScheme('https');
+}
 }

@@ -7,7 +7,7 @@
 /* ================== PAGE SETUP ================== */
 @page {
     size: A4;
-    margin: 280px 50px 100px 50px;
+    margin: 300px 50px 100px 50px;
 }
 
 
@@ -22,19 +22,20 @@ body {
 /* ================== HEADER ================== */
 .header {
     position: fixed;
-    top: -180px;
+    top: -250px;
     left: 0;
     right: 0;
     text-align: center;
 }
 
 .header img {
-    height: 70px;
+     max-height: 150px;
     margin-bottom: 5px;
+    margin-top: auto;
 }
 
 .header h3 {
-    margin: 5px 0;
+    margin: 3px 0;
     font-weight: bold;
 }
 
