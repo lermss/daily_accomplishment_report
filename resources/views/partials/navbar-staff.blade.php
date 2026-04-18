@@ -63,26 +63,28 @@
             </button>
 
             <div class="notification-panel position-absolute end-0 mt-2 shadow border rounded bg-white" data-notification-panel hidden style="min-width: 320px; max-width: 420px; z-index: 1050;">
-                <div class="notification-panel-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <div class="notification-panel-header d-flex justify-content-between align-items-center py-2 border-bottom">
                     <strong class="m-0">Notifications</strong>
                     <a href="{{ route('staff.dashboard') }}" class="text-decoration-none small">View all</a>
                 </div>
-                <div class="notification-panel-body p-3" id="staffNotificationsList">
+                <div class="notification-panel-body " id="staffNotificationsList">
                     @forelse ($staffNotifications as $notification)
-                        <div class="staff-notification-item mb-2">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <div class="fw-semibold">
-                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : 'Your report needs revision' }}
+                        <a href="{{ route('staff.reports.show', $notification->id) }}" class="staff-notification-item-link text-decoration-none" data-notification-id="{{ $notification->id }}">
+                            <div class="staff-notification-item ">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <div class="fw-semibold">
+                                            {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : 'Your report needs revision' }}
+                                        </div>
+                                        <div class="text-muted small">{{ $notification->file_name ?: 'Untitled report' }}</div>
+                                        <div class="text-muted small">{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</div>
                                     </div>
-                                    <div class="text-muted small">{{ $notification->file_name ?: 'Untitled report' }}</div>
-                                    <div class="text-muted small">{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</div>
+                                    <span class="staff-notification-status {{ $notification->status }}">
+                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : 'Needs Revision' }}
+                                    </span>
                                 </div>
-                                <span class="staff-notification-status {{ $notification->status }}">
-                                    {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : 'Needs Revision' }}
-                                </span>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <p class="text-muted mb-0" id="staffNotificationsEmpty">No report notifications yet.</p>
                     @endforelse
@@ -136,18 +138,23 @@
                 const reviewedAt = notification.reviewed_at ? `<div class="text-muted small">${notification.reviewed_at}</div>` : '';
 
                 return `
-                    <div class="staff-notification-item mb-2">
-                        <div class="d-flex justify-content-between align-items-start gap-3">
-                            <div>
-                                <div class="fw-semibold">${notification.message}</div>
-                                <div class="text-muted small">${notification.file_name || 'Untitled report'}</div>
-                                ${reviewedAt}
+                    <a href="${notification.route}" class="staff-notification-item-link text-decoration-none" data-notification-id="${notification.id}">
+                        <div class="staff-notification-item mb-2">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">${notification.message}</div>
+                                    <div class="text-muted small">${notification.file_name || 'Untitled report'}</div>
+                                    ${reviewedAt}
+                                </div>
+                                <span class="staff-notification-status ${statusClass}">${statusLabel}</span>
                             </div>
-                            <span class="staff-notification-status ${statusClass}">${statusLabel}</span>
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
+
+            // Add click listeners to the new notification links
+            addNotificationClickListeners();
         };
 
         const fetchNotifications = async () => {
@@ -194,6 +201,26 @@
             }
         };
 
+        // Handle notification link clicks
+        const handleNotificationClick = async (event) => {
+            event.preventDefault();
+            const link = event.currentTarget;
+            const href = link.getAttribute('href');
+
+            // Mark notifications as read
+            await markNotificationsRead();
+
+            // Redirect to the notification's page
+            window.location.href = href;
+        };
+
+        // Add click listeners to notification links
+        const addNotificationClickListeners = () => {
+            document.querySelectorAll('.staff-notification-item-link').forEach(link => {
+                link.addEventListener('click', handleNotificationClick);
+            });
+        };
+
         const openPanel = async () => {
             notificationPanel.hidden = false;
             toggleButton.setAttribute('aria-expanded', 'true');
@@ -229,5 +256,8 @@
             }
             closePanel();
         });
+
+        // Add click listeners to initial notification links
+        addNotificationClickListeners();
     });
 </script>

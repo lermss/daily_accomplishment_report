@@ -59,10 +59,10 @@ background:#fdecea;
 }
 
 .staff-notification-item{
-border:1px solid #eef1f4;
+border:1px solid #313335;
 border-radius:12px;
-padding:12px 14px;
-background:#fff;
+padding:5px px;
+background:rgb(190, 186, 186);
 }
 
 .staff-notification-item + .staff-notification-item{
@@ -82,9 +82,15 @@ color:#198754;
 color:#fd7e14;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
+.staff-notification-item-link:hover .staff-notification-item{
+background:rgba(190, 186, 186, 0.8);
+border-color:#dee2e6;
+
+}
+
+.staff-notification-item-link{
+display:block;
+transition:0.2s;
 }
 
 </style>

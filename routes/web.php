@@ -102,6 +102,7 @@ Route::controller(AdminDashboardController::class)->group(function () {
                 Route::get('/pending', 'adminPending')->name('pending');
                 Route::get('/revisions', 'adminRevisions')->name('revisions');
                 Route::post('/reports/{report}/status', 'updateReportStatus')->name('reports.status');
+                Route::get('/reports/{id}/export-pdf', 'exportReportPDF')->whereNumber('id')->name('reports.export-pdf');
             });
     });
 });

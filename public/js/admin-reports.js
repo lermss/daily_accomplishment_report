@@ -104,6 +104,7 @@
     const previewSignature = modal.querySelector('[data-preview-signature]');
     const previewSignatoryName = modal.querySelector('[data-preview-signatory-name]');
     const previewDownload = modal.querySelector('[data-preview-download]');
+    const previewPdfExport = modal.querySelector('[data-preview-pdf-export]');
     const reviewChoices = Array.from(modal.querySelectorAll('[data-review-choice]'));
     const reviewComment = modal.querySelector('[data-review-comment]');
     const existingComment = modal.querySelector('[data-existing-comment]');
@@ -257,6 +258,11 @@
                 previewDownload.hidden = true;
                 previewDownload.removeAttribute('href');
             }
+        }
+
+        if (previewPdfExport) {
+            previewPdfExport.hidden = false;
+            previewPdfExport.href = '/dashboard/admin/reports/' + report.id + '/export-pdf';
         }
     }
 

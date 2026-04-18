@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AdminPortalService;
 use App\Services\AuthFlowService;
 use App\Services\ProvincialHeadAssignmentService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -139,6 +140,25 @@ class AdminDashboardController extends Controller
         }
 
         return back()->with('status', 'Report review status updated successfully.');
+    }
+
+    public function exportReportPDF(Request $request, int $id)
+    {
+        $user = $this->authenticatedUser($request);
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        $report = Report::with('entries')->findOrFail($id);
+
+        // Admin can export any report
+        $pdf = Pdf::loadView('staff.reports.pdf', compact('report'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('dpi', 150)
+            ->setOption('defaultFont', 'Times-Roman');
+
+        return $pdf->download('report_' . $report->id . '.pdf');
     }
 
     private function renderAdminReports(Request $request, string $mode): View|RedirectResponse

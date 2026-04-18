@@ -124,15 +124,15 @@
       border-radius: 24px;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.1));
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      /* background: radial-gradient(circle at top, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.1)); */
+      /* border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px); */
+      /* -webkit-backdrop-filter: blur(8px); */
     }
 
     .logo-badge img {
-      width: 72%;
+      width: 100%;
       height: auto;
       display: block;
     }
@@ -442,7 +442,6 @@
         <section class="signin-panel" aria-label="Sign in form">
           <div class="signin-panel-inner">
             <div class="signin-copy">
-              <p class="signin-kicker">Bootstrap 5 UI</p>
               <h2>Sign In</h2>
               <p class="signin-subcopy">Enter your active email address to receive a one-time verification code.</p>
 

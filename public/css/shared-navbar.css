@@ -117,11 +117,11 @@
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
-    width: min(360px, 92vw);
+    width: min(160px, 92vw);
     padding: 16px;
     border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 22px 40px rgba(15, 23, 42, 0.18);
+    background: #7d7979;
+    box-shadow: 0 22px 40px rgb(69, 85, 123);
     border: 1px solid #e7edf4;
     color: #17324b;
 }
@@ -166,7 +166,7 @@
     gap: 12px;
     padding: 12px 10px;
     border-radius: 12px;
-    background: #f8fbff;
+    background: #cee2f6;
     text-decoration: none;
     color: inherit;
 }

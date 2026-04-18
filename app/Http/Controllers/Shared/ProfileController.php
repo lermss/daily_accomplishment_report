@@ -52,10 +52,12 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
             'project' => ['nullable', 'string', 'max:255'],
             'bureau' => ['nullable', 'string', 'max:255'],
+            'office' => ['required', 'string', 'max:255'],
             'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'signature_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);

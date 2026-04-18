@@ -62,6 +62,11 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Middle Name</label>
+                            <input type="text" name="middle_name" value="{{ $middleName }}" readonly>
+                        </div>
+
+                        <div class="form-group">
                             <label>Last Name</label>
                             <input type="text" name="last_name" value="{{ $lastName }}" required>
                         </div>
@@ -97,6 +102,18 @@
                             <option value="">Bureau</option>
                             @foreach ($bureauOptions as $option)
                                 <option value="{{ $option }}" {{ $bureau === $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    
+                    <div class="form-group">
+                        <label>Office</label>
+                        <select name="office">
+                            @foreach ($officeOptions as $option)
+                                <option value="{{ $option }}" {{ $office === $option ? 'selected' : '' }}>
                                     {{ $option }}
                                 </option>
                             @endforeach

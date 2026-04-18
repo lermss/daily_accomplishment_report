@@ -192,6 +192,15 @@
             color: #b91c1c;
         }
 
+        /* Review Note */
+        .review-note {
+            margin-top: 6px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #92400e;
+            white-space: pre-wrap;
+        }
+
         /* Export Buttons */
         .export-btn {
             border: none;
@@ -314,13 +323,20 @@
                             <span class="status {{ $report->status }}">
                                 {{ ucfirst(str_replace('_', ' ', $report->status)) }}
                             </span>
+                            @if($report->status === 'for_revision' && $report->review_comment)
+                                <div class="review-note">Comment: {{ $report->review_comment }}</div>
+                            @endif
                         </td>
                         <td>{{ optional($report->reviewed_at)->format('m/d/Y') ?? '-' }}</td>
                         <td>
                            @if(in_array($report->status, ['approved', 'draft'], true))
-                             <a href="{{ route('staff.reports.pdf', $report) }}" class="export-btn">Export</a>
+                             @if($report->status === 'approved')
+                               <button class="export-btn" data-bs-toggle="modal" data-bs-target="#exportConfirmModal" data-pdf-url="{{ route('staff.reports.pdf', $report) }}">ExportPDF</button>
+                             @else
+                               <a href="{{ route('staff.reports.pdf', $report) }}" class="export-btn">ExportPDF</a>
+                             @endif
                             @else
-                          <button class="export-btn" disabled title="Export is only available for approved or draft reports">Export</button>
+                          <button class="export-btn" disabled title="Export is only available for approved or draft reports">ExportPDF</button>
                             @endif
                         </td>
                     </tr>
@@ -332,4 +348,52 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Export Confirmation Modal -->
+    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportConfirmModalLabel">Confirm Export</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Do you want to export this file as PDF?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmExportBtn">Yes, Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportConfirmModal = document.getElementById('exportConfirmModal');
+            const confirmExportBtn = document.getElementById('confirmExportBtn');
+            let currentPdfUrl = '';
+
+            // When modal is shown, get the PDF URL from the button that triggered it
+            exportConfirmModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                currentPdfUrl = button.getAttribute('data-pdf-url');
+            });
+
+            // When "Yes, Export" is clicked, redirect to the PDF URL
+            confirmExportBtn.addEventListener('click', function() {
+                if (currentPdfUrl) {
+                    window.location.href = currentPdfUrl;
+                }
+                // Hide the modal
+                const modal = bootstrap.Modal.getInstance(exportConfirmModal);
+                modal.hide();
+            });
+
+            // Clear the URL when modal is hidden
+            exportConfirmModal.addEventListener('hidden.bs.modal', function() {
+                currentPdfUrl = '';
+            });
+        });
+    </script>
 @endsection

@@ -54,6 +54,7 @@ class DashboardController extends Controller
                 Report::STATUS_APPROVED,
                 Report::STATUS_FOR_REVISION,
             ])
+            ->select(['id', 'user_id', 'file_name', 'status', 'submitted_at', 'created_at', 'reviewed_at', 'review_comment'])
             ->with(['entries' => fn ($q) => $q->orderBy('id')]);
 
         // Apply status filter ONLY to table

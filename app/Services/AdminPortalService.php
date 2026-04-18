@@ -177,6 +177,7 @@ class AdminPortalService
         $reports = Report::query()
             ->with([
                 'user:id,name,avatar_path,signature_path,office',
+                'assignedProvincialHead:id,name',
                 'entries' => fn ($query) => $query
                     ->select(['id', 'report_id', 'start_date', 'end_date', 'activity', 'details', 'remarks'])
                     ->orderBy('start_date')
@@ -205,6 +206,7 @@ class AdminPortalService
                 $report->setAttribute('user_signature_path', $report->user?->signature_path);
                 $report->setAttribute('user_office', $report->user?->office);
                 $report->setAttribute('review_comment_text', $report->review_comment);
+                $report->setAttribute('approved_by_name', $report->assignedProvincialHead?->name);
                 $report->setAttribute(
                     'entry_preview',
                     optional($report->entries->first(), fn ($entry) => $entry->details ?: $entry->activity ?: $entry->remarks)
@@ -487,6 +489,14 @@ class AdminPortalService
             ->values()
             ->all();
 
+        $officeOptions = collect($this->userFormOptions())
+            ->pluck('officeOptions')
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $fallbackNameParts = preg_split('/\s+/', trim($user->name ?? ''), 2) ?: ['', ''];
         $profileImageUrl = $user->avatar_path ? route('media.public', ['path' => ltrim($user->avatar_path, '/')]) : null;
         $signatureImageUrl = $user->signature_path ? route('media.public', ['path' => ltrim($user->signature_path, '/')]) : null;
@@ -495,13 +505,16 @@ class AdminPortalService
             'title' => 'Edit Profile',
             'user' => $user,
             'firstName' => old('first_name', $user->first_name ?: ($fallbackNameParts[0] ?? '')),
+            'middleName' => old('middle_name', $user->middle_name),
             'lastName' => old('last_name', $user->last_name ?: ($fallbackNameParts[1] ?? '')),
             'position' => old('position', $user->position),
             'project' => old('project', $user->project),
             'bureau' => old('bureau', $user->bureau),
+            'office' => old('office', $user->office),
             'positionOptions' => array_values(array_unique(array_filter(array_merge($positionOptions, [$user->position])))),
             'projectOptions' => array_values(array_unique(array_filter(array_merge($projectOptions, [$user->project])))),
             'bureauOptions' => array_values(array_unique(array_filter(array_merge($bureauOptions, [$user->bureau])))),
+            'officeOptions' => array_values(array_unique(array_filter(array_merge($officeOptions, [$user->office])))),
             'canAccessAudit' => $this->authFlowService->canAccessAudit($user->role),
             'profileImageUrl' => $profileImageUrl,
             'signatureImageUrl' => $signatureImageUrl,
@@ -582,10 +595,12 @@ class AdminPortalService
         $updates = [
             'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
             'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?: null,
             'last_name' => $validated['last_name'],
             'position' => $validated['position'] ?: null,
             'project' => $validated['project'] ?: null,
             'bureau' => $validated['bureau'] ?: null,
+            'office' => $validated['office'] ?: null,
         ];
 
         if ($request->hasFile('profile_image')) {
@@ -697,6 +712,7 @@ class AdminPortalService
     {
         return DB::table('reports')
             ->leftJoin('users', 'users.id', '=', 'reports.user_id')
+            ->leftJoin('users as approvers', 'approvers.id', '=', 'reports.reviewed_by')
             ->whereIn('reports.status', ['pending', 'approved', 'for_revision'])
             ->when($user?->role === 'ph-admin', function ($query) use ($user) {
                 $query->where(function ($scopedQuery) use ($user) {

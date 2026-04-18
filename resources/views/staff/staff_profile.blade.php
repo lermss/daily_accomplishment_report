@@ -158,6 +158,12 @@
                 <label>First Name</label>
                 <input type="text" name="first_name" value= "{{ $firstName }}" readonly>
             </div>
+    
+           
+            <div class="form-group">
+                <label>Middle Name</label>
+                <input type="text" name="middle_name" value="{{ $middleName }}" readonly>
+            </div>
 
             <div class="form-group">
                 <label>Last Name</label>
@@ -193,6 +199,18 @@
             <select name="bureau">
                 @foreach ($bureauOptions as $option)
                     <option value="{{ $option }}" {{ $bureau === $option ? 'selected' : '' }}>
+                        {{ $option }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+       
+        <div class="form-group">
+            <label>Office</label>
+            <select name="office">
+                @foreach ($officeOptions as $option)
+                    <option value="{{ $option }}" {{ $office === $option ? 'selected' : '' }}>
                         {{ $option }}
                     </option>
                 @endforeach

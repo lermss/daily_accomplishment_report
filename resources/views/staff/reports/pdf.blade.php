@@ -150,25 +150,46 @@ td {
         </tbody>
     </table>
 
+    @php
+        $staffSignaturePath = $report->user?->signature_path
+            ? storage_path('app/public/' . ltrim($report->user->signature_path, '/'))
+            : null;
+
+        $provincialHeadSignaturePath = $report->assignedProvincialHead?->signature_path
+            ? storage_path('app/public/' . ltrim($report->assignedProvincialHead->signature_path, '/'))
+            : null;
+    @endphp
+
     <!-- ================== SIGNATURE ================== -->
     <div class="signature-section">
         <table>
             <tr>
                 <td>
                     Prepared By:<br><br>
-                    _________________________<br>
-                    {{ $report->prepared_by ?? 'Staff Name' }}
+
+                    @if($staffSignaturePath && file_exists($staffSignaturePath))
+                        <img src="data:{{ mime_content_type($staffSignaturePath) }};base64,{{ base64_encode(file_get_contents($staffSignaturePath)) }}" alt="Signature" style="max-height: 100px;" >
+                    @else
+                    <br>
+
+                     _________________________<br>
+                   
+                    @endif
+                    {{ $report->user->name ?? 'Staff Name' }}
                 </td>
                 <td>
                     Approved By:<br><br>
-                    _________________________<br>
-                    {{ $report->approved_by ?? 'Provincial Head' }}
+
+                    @if($report->status === 'approved' && $provincialHeadSignaturePath && file_exists($provincialHeadSignaturePath))
+                        <img src="data:{{ mime_content_type($provincialHeadSignaturePath) }};base64,{{ base64_encode(file_get_contents($provincialHeadSignaturePath)) }}" alt="Signature" style="max-height: 100px;">
+                    @else
+                        _________________________<br>
+                    @endif
+                    {{ $report->status === 'approved' ? ($report->assignedProvincialHead->name ?? 'Provincial Head') : 'Pending Approval' }}
+
                 </td>
             </tr>
         </table>
     </div>
 
-</div>
-
-</body>
 </html>

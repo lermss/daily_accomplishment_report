@@ -49,7 +49,11 @@
                         <div class="modal-note">This view is read-only in monitoring mode. Status changes remain available only to admin users.</div>
                     @endif
                     <a href="#" class="action-button download-link" data-preview-download hidden><svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v8.59l2.3-2.29 1.4 1.41L12 16.41l-4.7-4.7 1.4-1.41L11 12.59V4a1 1 0 0 1 1-1Zm-7 14h14v3H5Z"/></svg><span>Download Attachment</span></a>
+                    <a href="#" class="action-button" data-preview-pdf-export hidden>Export PDF</a>
                 </div>
+                <!-- <div>
+                    <button type="button danger" class="action-button" data-preview-pdf-export hidden>Export PDF</button>
+                </div> -->
             </aside>
         </div>
     </div>

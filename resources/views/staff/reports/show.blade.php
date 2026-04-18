@@ -185,10 +185,16 @@ body {
         @endif
     </form>
 
+    <!-- Success Message Alert -->
+    <div id="successAlert" class="alert alert-success alert-dismissible fade" role="alert" style="margin-top: 20px; display: none;">
+        <strong>Success!</strong> Comment saved successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="mt-3 d-flex justify-content-end gap-2">
 
         @if($report->status !== 'approved')
-            <button type="submit" form="updateForm" class="btn btn-primary">
+            <button type="submit" form="updateForm" class="btn btn-primary" id="saveBtn">
                 Save
             </button>
         @else
@@ -198,9 +204,9 @@ body {
         @endif
 
         @if($report->status !== 'approved')
-        <form id="submitReportForm" action="{{ route('staff.reports.submit',$report->id) }}" method="POST">
+        <form id="submitReportForm" action="{{ route('staff.reports.submit',$report->id) }}" method="POST" style="display: contents;">
             @csrf
-            <button class="btn btn-success">Submit</button>
+            <button type="button" class="btn btn-success" id="submitBtn" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">Submit</button>
         </form>
         @endif
 
@@ -214,6 +220,25 @@ body {
 
     </div>
 
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitConfirmModalLabel">Confirm Submission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Once submitted, this report will be reviewed by the Provincial Head. Please confirm that all information is complete and accurate before proceeding.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmSubmitBtn">Yes, Submit</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -257,6 +282,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     autoResizeTextarea(this);
                 });
             });
+        });
+    }
+
+    // Success message for Save button
+    const updateForm = document.getElementById('updateForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const successAlert = document.getElementById('successAlert');
+
+    if (updateForm && saveBtn) {
+        updateForm.addEventListener('submit', function(e) {
+            // Show success message
+            successAlert.style.display = 'block';
+            successAlert.classList.add('show');
+
+            // Auto-hide after 4 seconds
+            setTimeout(function() {
+                successAlert.classList.remove('show');
+                setTimeout(function() {
+                    successAlert.style.display = 'none';
+                }, 150);
+            }, 4000);
+        });
+    }
+
+    // Submit confirmation modal
+    const submitBtn = document.getElementById('submitBtn');
+    const submitConfirmModal = document.getElementById('submitConfirmModal');
+    const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+    const submitReportForm = document.getElementById('submitReportForm');
+
+    if (confirmSubmitBtn && submitReportForm) {
+        confirmSubmitBtn.addEventListener('click', function() {
+            // Submit the actual form
+            submitReportForm.submit();
         });
     }
 });
