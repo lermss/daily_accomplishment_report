@@ -57,4 +57,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 503);
             }
         });
+    })->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // Run audit log cleanup daily at 2 AM
+        $schedule->command('audit:cleanup')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground();
     })->create();

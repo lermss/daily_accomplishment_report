@@ -193,6 +193,46 @@ class AdminDashboardController extends Controller
     {
         return $this->authFlowService->requireAuthenticated($request, $guard);
     }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $user = $this->authenticatedUser($request);
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        $reportIds = $request->input('report_ids', []);
+        
+        if (!empty($reportIds)) {
+            // Only allow deleting approved reports
+            Report::whereIn('id', $reportIds)
+                ->where('status', 'approved')
+                ->where(function ($query) use ($user) {
+                    // Ensure the user can only delete reports they can review
+                    $this->provincialHeadAssignmentService->scopeReportsForReviewer($query, $user);
+                })
+                ->update(['is_hidden_from_admin_dashboard' => true]);
+
+            // Check if any reports are now hidden from all views and permanently delete them
+            $this->permanentlyDeleteFullyHiddenReports();
+        }
+
+        return redirect()->back()->with('success', 'Selected approved reports have been hidden from admin dashboard.');
+    }
+
+    private function permanentlyDeleteFullyHiddenReports(): void
+    {
+        // Find reports that are hidden from all views (admin dashboard, staff dashboard, staff index)
+        $fullyHiddenReports = Report::where('is_hidden_from_admin_dashboard', true)
+            ->where('is_hidden_from_staff_dashboard', true)
+            ->where('is_hidden_from_staff_index', true)
+            ->pluck('id');
+
+        if ($fullyHiddenReports->isNotEmpty()) {
+            Report::whereIn('id', $fullyHiddenReports)->delete();
+        }
+    }
 }
 
 

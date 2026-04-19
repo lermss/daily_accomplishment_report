@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\SuperAdminNotificationController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\HealthCheckController;
@@ -67,6 +68,11 @@ Route::redirect('/home/staff', '/staff/home');
 Route::redirect('/dashboard/staff', '/staff/dashboard')
     ->middleware('staff.session')
     ->name('dashboard.staff');
+// ADD THIS CODE
+Route::redirect('/home/intern', '/intern/home');
+Route::redirect('/dashboard/intern', '/intern/dashboard')
+    ->middleware('staff.session')
+    ->name('dashboard.intern');
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +92,17 @@ Route::controller(AdminDashboardController::class)->group(function () {
                 Route::get('/approved', 'reportsApproved')->name('approved');
                 Route::get('/pending', 'reportsPending')->name('pending');
                 Route::get('/revisions', 'reportsRevisions')->name('revisions');
+                Route::post('/bulk-delete', 'bulkDelete')->name('bulk-delete');
+            });
+
+        // ADD THIS CODE: super admin notification center routes.
+        Route::controller(SuperAdminNotificationController::class)
+            ->prefix('dashboard/super-admin/notifications')
+            ->name('super-admin.notifications.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/mark-all-read', 'markAllRead')->name('mark-all-read');
+                Route::post('/{notification}/mark-read', 'markRead')->name('mark-read');
             });
 
     });
@@ -103,6 +120,7 @@ Route::controller(AdminDashboardController::class)->group(function () {
                 Route::get('/revisions', 'adminRevisions')->name('revisions');
                 Route::post('/reports/{report}/status', 'updateReportStatus')->name('reports.status');
                 Route::get('/reports/{id}/export-pdf', 'exportReportPDF')->whereNumber('id')->name('reports.export-pdf');
+                Route::post('/bulk-delete', 'bulkDelete')->name('bulk-delete');
             });
     });
 });
@@ -135,6 +153,11 @@ Route::get('/audit-log', [AuditController::class, 'index'])
     ->middleware('role.session:admin,ph-admin,super_admin,hr-super-admin')
     ->name('audit.index');
 
+// ADD THIS CODE
+Route::get('/intern/audit-log', [AuditController::class, 'index'])
+    ->middleware('role.session:interns')
+    ->name('intern.audit.index');
+
 Route::controller(ProfileController::class)
     ->prefix('profile')
     ->middleware('role.session:admin,ph-admin,super_admin,hr-super-admin')
@@ -158,6 +181,7 @@ Route::middleware('staff.session')->group(function () {
 
     Route::controller(DashboardController::class)->group(function () {
         Route::get('/staff/dashboard', 'staff')->name('staff.dashboard');
+        Route::post('/staff/dashboard/bulk-delete', 'bulkDelete')->name('staff.dashboard.bulk-delete');
     });
 
     Route::controller(ProfileController::class)->group(function () {
@@ -187,6 +211,49 @@ Route::controller(ReportController::class)->prefix('staff/reports')->name('staff
     Route::get('/{id}/pdf', 'exportPDF')->whereNumber('id')->name('pdf');
     Route::post('/{id}/submit', 'submit')->whereNumber('id')->name('submit');
 });
+
+    // ADD THIS CODE
+    Route::controller(HomeController::class)->group(function () {
+        Route::get('/intern/home', 'staffHome')->name('intern.home');
+    });
+
+    // ADD THIS CODE
+    Route::controller(DashboardController::class)->group(function () {
+        Route::get('/intern/dashboard', 'staff')->name('intern.dashboard');
+        Route::post('/intern/dashboard/bulk-delete', 'bulkDelete')->name('intern.dashboard.bulk-delete');
+    });
+
+    // ADD THIS CODE
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/intern/profile', 'staffProfile')->name('intern.profile');
+        Route::put('/intern/profile', 'update')->name('intern.profile.update');
+    });
+
+    // ADD THIS CODE
+    Route::controller(StaffNotificationController::class)->group(function () {
+        Route::get('/intern/notifications', 'index')->name('intern.notifications.index');
+        Route::post('/intern/notifications/read', 'markAsRead')->name('intern.notifications.read');
+    });
+
+    // ADD THIS CODE
+    Route::controller(ReportController::class)->group(function () {
+        Route::get('/intern/reports', 'index')->name('intern.reports');
+    });
+
+    // ADD THIS CODE
+    Route::redirect('/intern/reports/index', '/intern/reports')->name('intern.reports.index');
+
+    // ADD THIS CODE
+    Route::controller(ReportController::class)->prefix('intern/reports')->name('intern.reports.')->group(function () {
+        Route::get('/create', 'createReport')->name('create');
+        Route::post('/', 'storeReport')->name('store');
+        Route::get('/{id}', 'show')->whereNumber('id')->name('show');
+        Route::put('/{id}', 'update')->whereNumber('id')->name('update');
+        Route::put('/{id}/file-name', 'updateFile')->whereNumber('id')->name('updateFile');
+        Route::delete('/{id}', 'destroy')->whereNumber('id')->name('destroy');
+        Route::get('/{id}/pdf', 'exportPDF')->whereNumber('id')->name('pdf');
+        Route::post('/{id}/submit', 'submit')->whereNumber('id')->name('submit');
+    });
 
     });
 

@@ -22,6 +22,7 @@ class ReportWorkflowService
         return Report::query()
             ->with('entries')
             ->when($staffUser, fn ($query) => $query->where('user_id', $staffUser->id))
+            ->where('is_hidden_from_staff_index', false)
             ->when($searchTerm !== '', function ($query) use ($searchTerm) {
                 $query->where(function ($innerQuery) use ($searchTerm) {
                     $innerQuery

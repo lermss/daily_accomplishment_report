@@ -460,7 +460,7 @@
               </div>
             </div>
 
-            <form class="signin-form" method="POST" action="">
+            <form class="signin-form" method="POST" action="" data-send-otp-form>
               @csrf
               <label class="input-label" for="email">Email Address</label>
               <div class="input-wrap">
@@ -476,7 +476,7 @@
                 >
               </div>
 
-              <button type="submit" class="otp-button">
+              <button type="submit" class="otp-button" data-send-otp-button>
                 <span class="otp-button-text">Send OTP</span>
                 <span aria-hidden="true">&rsaquo;</span>
               </button>
@@ -488,4 +488,25 @@
 
     <footer class="signin-footer">&copy; DICT PO1 2026. All Rights Reserved</footer>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('[data-send-otp-form]');
+      const button = document.querySelector('[data-send-otp-button]');
+
+      if (!form || !button) {
+        return;
+      }
+
+      form.addEventListener('submit', function () {
+        if (button.disabled) {
+          return;
+        }
+
+        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
+        button.querySelector('.otp-button-text').textContent = 'Sending OTP...';
+      });
+    });
+  </script>
 @endsection

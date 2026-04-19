@@ -27,6 +27,7 @@ class UserManagementController extends Controller
     public function archive(Request $request): View|RedirectResponse
     {
         return $this->renderDashboard($request, 'archive');
+        
     }
 
     public function active(Request $request): View|RedirectResponse

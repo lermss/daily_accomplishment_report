@@ -26,6 +26,9 @@ class Report extends Model
         'reviewed_at',
         'reviewed_by',
         'review_comment',
+        'is_hidden_from_staff_dashboard',
+        'is_hidden_from_staff_index',
+        'is_hidden_from_admin_dashboard',
     ];
 
     protected $casts = [

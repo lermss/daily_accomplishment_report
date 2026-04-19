@@ -1,6 +1,10 @@
 @extends('staff.layouts.app')
 
 @section('content')
+    @php
+        // ADD THIS CODE
+        $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix(session('authenticated_user_role', session('role', optional(\App\Models\User::find(session('authenticated_user_id')))->role)));
+    @endphp
     <style>
         /* General Styles */
         * {
@@ -242,6 +246,13 @@
     @endphp
 
     <div class="container">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <!-- Cards Section -->
         <div class="cards">
             @php
@@ -304,95 +315,145 @@
         </div>
 
         <!-- Table Section -->
-        <table class="table" id="reports-table">
-            <thead>
-                <tr>
-                    <th>Date Submitted</th>
-                    <th>File Name</th>
-                    <th>Status</th>
-                    <th>Date Returned</th>
-                    <th>Download</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($reports as $report)
+        <form id="bulkDeleteForm" method="POST" action="{{ route($staffRouteBase . '.dashboard.bulk-delete') }}">
+            @csrf
+            <table class="table" id="reports-table">
+                <thead>
                     <tr>
-                        <td>{{ optional($report->submitted_at ?? $report->created_at)->format('m/d/Y') }}</td>
-                        <td>{{ $report->file_name }}</td>
-                        <td>
-                            <span class="status {{ $report->status }}">
-                                {{ ucfirst(str_replace('_', ' ', $report->status)) }}
-                            </span>
-                            @if($report->status === 'for_revision' && $report->review_comment)
-                                <div class="review-note">Comment: {{ $report->review_comment }}</div>
-                            @endif
-                        </td>
-                        <td>{{ optional($report->reviewed_at)->format('m/d/Y') ?? '-' }}</td>
-                        <td>
-                           @if(in_array($report->status, ['approved', 'draft'], true))
-                             @if($report->status === 'approved')
-                               <button class="export-btn" data-bs-toggle="modal" data-bs-target="#exportConfirmModal" data-pdf-url="{{ route('staff.reports.pdf', $report) }}">ExportPDF</button>
-                             @else
-                               <a href="{{ route('staff.reports.pdf', $report) }}" class="export-btn">ExportPDF</a>
-                             @endif
-                            @else
-                          <button class="export-btn" disabled title="Export is only available for approved or draft reports">ExportPDF</button>
-                            @endif
-                        </td>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>Date Submitted</th>
+                        <th>File Name</th>
+                        <th>Status</th>
+                        <th>Date Returned</th>
+                        <th>Download</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="5">No submitted reports yet</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Export Confirmation Modal -->
-    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exportConfirmModalLabel">Confirm Export</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Do you want to export this file as PDF?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmExportBtn">Yes, Export</button>
-                </div>
+                </thead>
+                <tbody>
+                    @forelse($reports as $report)
+                        <tr>
+                            <td><input type="checkbox" name="report_ids[]" value="{{ $report->id }}" class="report-checkbox"></td>
+                            <td>{{ optional($report->submitted_at ?? $report->created_at)->format('m/d/Y') }}</td>
+                            <td>
+                                <a href="{{ route($staffRouteBase . '.reports.show', $report->id) }}">
+                                    {{ $report->file_name }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="status {{ $report->status }}">
+                                    {{ ucfirst(str_replace('_', ' ', $report->status)) }}
+                                </span>
+                                @if($report->status === 'for_revision' && $report->review_comment)
+                                    <div class="review-note">Comment: {{ $report->review_comment }}</div>
+                                @endif
+                            </td>
+                            <td>{{ optional($report->reviewed_at)->format('m/d/Y') ?? '-' }}</td>
+                            <td>
+                               @if(in_array($report->status, ['approved', 'draft'], true))
+                                 @if($report->status === 'approved')
+                                   <button type="button" class="export-btn" data-export-pdf-url="{{ route($staffRouteBase . '.reports.pdf', $report) }}">ExportPDF</button>
+                                 @else
+                                   <a href="{{ route($staffRouteBase . '.reports.pdf', $report) }}" class="export-btn">ExportPDF</a>
+                                 @endif
+                                @else
+                              <button class="export-btn" disabled title="Export is only available for approved or draft reports">ExportPDF</button>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">No submitted reports yet</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div style="margin-top: 15px;">
+                <button type="submit" id="deleteSelectedBtn" class="btn btn-danger" style="padding: 10px 15px; border-radius: 20px;" disabled>Delete Selected</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const exportConfirmModal = document.getElementById('exportConfirmModal');
-            const confirmExportBtn = document.getElementById('confirmExportBtn');
-            let currentPdfUrl = '';
+            // Bulk delete functionality
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const reportCheckboxes = document.querySelectorAll('.report-checkbox');
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+            const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+            const exportButtons = document.querySelectorAll('[data-export-pdf-url]');
 
-            // When modal is shown, get the PDF URL from the button that triggered it
-            exportConfirmModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                currentPdfUrl = button.getAttribute('data-pdf-url');
+            function updateDeleteButton() {
+                const checkedBoxes = document.querySelectorAll('.report-checkbox:checked');
+                deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+            }
+
+            selectAllCheckbox.addEventListener('change', function() {
+                reportCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateDeleteButton();
             });
 
-            // When "Yes, Export" is clicked, redirect to the PDF URL
-            confirmExportBtn.addEventListener('click', function() {
-                if (currentPdfUrl) {
-                    window.location.href = currentPdfUrl;
+            reportCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(reportCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(reportCheckboxes).some(cb => cb.checked);
+                    
+                    selectAllCheckbox.checked = allChecked;
+                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                    
+                    updateDeleteButton();
+                });
+            });
+
+            bulkDeleteForm.addEventListener('submit', function(e) {
+                const checkedBoxes = document.querySelectorAll('.report-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    e.preventDefault();
+                    return;
                 }
-                // Hide the modal
-                const modal = bootstrap.Modal.getInstance(exportConfirmModal);
-                modal.hide();
+                e.preventDefault();
+
+                if (typeof window.openStaffConfirmModal !== 'function') {
+                    bulkDeleteForm.submit();
+                    return;
+                }
+
+                window.openStaffConfirmModal({
+                    title: 'Confirm Delete',
+                    message: `Are you sure you want to delete ${checkedBoxes.length} selected report(s) from your dashboard?`,
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel',
+                    variant: 'danger',
+                    onConfirm: function () {
+                        bulkDeleteForm.submit();
+                    }
+                });
             });
 
-            // Clear the URL when modal is hidden
-            exportConfirmModal.addEventListener('hidden.bs.modal', function() {
-                currentPdfUrl = '';
+            exportButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const pdfUrl = button.getAttribute('data-export-pdf-url');
+
+                    if (!pdfUrl) {
+                        return;
+                    }
+
+                    if (typeof window.openStaffConfirmModal !== 'function') {
+                        window.location.href = pdfUrl;
+                        return;
+                    }
+
+                    window.openStaffConfirmModal({
+                        title: 'Confirm Export',
+                        message: 'Do you want to export this file as PDF?',
+                        confirmText: 'Export',
+                        cancelText: 'Cancel',
+                        variant: 'success',
+                        onConfirm: function () {
+                            window.location.href = pdfUrl;
+                        }
+                    });
+                });
             });
         });
     </script>

@@ -41,6 +41,11 @@ class ReportController extends Controller
         $report = $this->findOwnedReport($request, $id, ['entries']);
         $this->reportWorkflowService->updateReport($report, $request->validated());
 
+        // Unhide reports with pending or for_revision status when they are updated
+        if (in_array($report->status, ['pending', 'for_revision'])) {
+            $report->update(['is_hidden_from_staff_index' => false]);
+        }
+
         return back()->with('success', 'Report updated.');
     }
 
@@ -69,7 +74,8 @@ class ReportController extends Controller
         $this->reportWorkflowService->createDraftReport($staffUser, $request->validated());
 
         return redirect()
-            ->route('staff.reports')
+            // ADD THIS CODE
+            ->route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($staffUser?->role, 'reports'))
             ->with('success', 'Draft report created.')
             ->with('clear_report_draft', true);
     }
@@ -106,9 +112,14 @@ class ReportController extends Controller
     public function destroy(Request $request, int $id): RedirectResponse
     {
         $report = $this->findOwnedReport($request, $id);
-        $report->delete();
 
-        return redirect()->route('staff.reports.index')->with('success', 'Report deleted.');
+        // Soft delete: hide from staff index instead of actually deleting
+        $report->update(['is_hidden_from_staff_index' => true]);
+
+        return redirect()
+            // ADD THIS CODE
+            ->route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($this->resolveStaffUser($request)?->role, 'reports.index'))
+            ->with('success', 'Report hidden from your reports list.');
     }
 
     public function submit(Request $request, int $id): RedirectResponse
@@ -122,7 +133,13 @@ class ReportController extends Controller
         $report = $this->findOwnedReport($request, $id);
         $this->reportWorkflowService->submitReport($report, $staffUser);
 
-        return redirect()->route('dashboard.staff')->with('success', 'Report submitted to your assigned Provincial Head for review.');
+        // Unhide reports when submitted so they become visible in the index
+        $report->update(['is_hidden_from_staff_dashboard' => false]);
+
+        return redirect()
+            // ADD THIS CODE
+            ->route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($staffUser?->role, 'dashboard'))
+            ->with('success', 'Report submitted to your assigned Provincial Head for review.');
     }
 
     public function storeEntry(Request $request)

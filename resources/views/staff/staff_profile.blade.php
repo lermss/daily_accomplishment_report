@@ -1,6 +1,10 @@
 @extends('staff.layouts.app')
 
 @section('content')
+@php
+    // ADD THIS CODE
+    $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix($user->role ?? null);
+@endphp
 
 <link rel="stylesheet" href="{{ asset('css/edit-profile.css') }}">
 
@@ -98,10 +102,10 @@
 
     <div class="profile-header">
         <h2>Personal Information</h2>
-        <button class="btn btn-danger" data-open-signout-modal>Sign Out</button>
+        <button type="button" class="btn btn-danger" id="staffSignOutTrigger">Sign Out</button>
     </div>
 
-    <form method="POST" action="{{ route('staff.profile.update') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route($staffRouteBase . '.profile.update') }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -223,17 +227,33 @@
     </form>
 </div>
 
-<!-- SIGN OUT MODAL -->
-<div class="confirm-backdrop" data-signout-modal>
-    <div class="confirm-modal">
-        <h3>Sign Out</h3>
-        <p>Are you sure you want to sign out?</p>
-
-        <button data-close-signout-modal class="btn">Cancel</button>
-        <a href="{{ route('logout') }}" class="btn btn-danger">Confirm</a>
-    </div>
-</div>
-
 <script src="{{ asset('js/profile.js') }}" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const signOutTrigger = document.getElementById('staffSignOutTrigger');
+
+    if (!signOutTrigger) {
+        return;
+    }
+
+    signOutTrigger.addEventListener('click', function () {
+        if (typeof window.openStaffConfirmModal !== 'function') {
+            window.location.href = '{{ route('logout') }}';
+            return;
+        }
+
+        window.openStaffConfirmModal({
+            title: 'Sign Out',
+            message: 'Are you sure you want to sign out?',
+            confirmText: 'Sign Out',
+            cancelText: 'Cancel',
+            variant: 'danger',
+            onConfirm: function () {
+                window.location.href = '{{ route('logout') }}';
+            }
+        });
+    });
+});
+</script>
 
 @endsection

@@ -6,7 +6,9 @@
     }
 
     $homePageRole = auth()->user()?->role ?? $homePageUser?->role;
-    $isStaffHome = in_array((string) $homePageRole, ['staff', 'special_access'], true);
+    // ADD THIS CODE
+    $staffPortalRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix($homePageRole);
+    $isStaffHome = in_array((string) $homePageRole, ['staff', 'interns', 'special_access'], true);
     $homePageCanAccessAudit = $canAccessAudit
         ?? in_array((string) $homePageRole, ['super_admin', 'hr-super-admin', 'admin', 'ph-admin'], true);
     $pageTitle = $title ?? 'Home Page';
@@ -100,7 +102,7 @@
 
         <div>
             <div class="shared-homepage">
-                @include('partials.homepage-content', ['dashboardRoute' => route('staff.dashboard')])
+                @include('partials.homepage-content', ['dashboardRoute' => route($staffPortalRouteBase . '.dashboard')])
             </div>
         </div>
 

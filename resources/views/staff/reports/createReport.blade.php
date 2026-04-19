@@ -1,6 +1,10 @@
 @extends('staff.layouts.app')
 
 @section('content')
+@php
+    // ADD THIS CODE
+    $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix(optional(\App\Models\User::find(session('authenticated_user_id')))->role);
+@endphp
 
 <style>
 body {
@@ -125,7 +129,7 @@ body {
 </style>
 
 <div class="d-flex justify-content-start mb-3">
-    <a href="{{ route('staff.reports') }}" class="btn btn-secondary"> < Back</a>
+    <a href="{{ route($staffRouteBase . '.reports') }}" class="btn btn-secondary"> < Back</a>
 </div>
 
 <div class="card card-a4">
@@ -135,7 +139,7 @@ body {
         <h4 class="fw-bold">ACCOMPLISHMENT REPORT</h4>
     </div>
 
-    <form id="reportForm" action="{{ route('staff.reports.store') }}" method="POST">
+    <form id="reportForm" action="{{ route($staffRouteBase . '.reports.store') }}" method="POST">
         @csrf
 
         <!-- FILE NAME -->

@@ -167,28 +167,41 @@ td {
                 <td>
                     Prepared By:<br><br>
 
-                    @if($staffSignaturePath && file_exists($staffSignaturePath))
-                        <img src="data:{{ mime_content_type($staffSignaturePath) }};base64,{{ base64_encode(file_get_contents($staffSignaturePath)) }}" alt="Signature" style="max-height: 100px;" >
-                    @else
-                    <br>
+                    <div style="text-align: center;">
+                        @if($staffSignaturePath && file_exists($staffSignaturePath))
+                            <img src="data:{{ mime_content_type($staffSignaturePath) }};base64,{{ base64_encode(file_get_contents($staffSignaturePath)) }}"
+                                alt="Signature"
+                                style="display: block; margin: 0 auto; max-height: 100px;">
+                        @else
+                            <br>
+                            _________________________<br>
+                        @endif
+                    </div>
 
-                     _________________________<br>
-                   
-                    @endif
-                    {{ $report->user->name ?? 'Staff Name' }}
+                    <div style="text-align: center;">
+                        {{ $report->user->name ?? 'Staff Name' }}
+                    </div>
+                 </td>
+                  <td>
+                          Approved By:<br><br>
+
+                    <div style="text-align: center;">
+                        @if($report->status === 'approved' && $provincialHeadSignaturePath && file_exists($provincialHeadSignaturePath))
+                            <img src="data:{{ mime_content_type($provincialHeadSignaturePath) }};base64,{{ base64_encode(file_get_contents($provincialHeadSignaturePath)) }}"
+                                alt="Signature"
+                                style="display: block; margin: 0 auto; max-height: 100px;">
+                        @else
+                            _________________________<br>
+                        @endif
+                    </div>
+
+                    <div style="text-align: center;">
+                        {{ $report->status === 'approved'
+                            ? ($report->assignedProvincialHead->name ?? 'Provincial Head')
+                            : 'Pending Approval' }}
+                    </div>
                 </td>
-                <td>
-                    Approved By:<br><br>
-
-                    @if($report->status === 'approved' && $provincialHeadSignaturePath && file_exists($provincialHeadSignaturePath))
-                        <img src="data:{{ mime_content_type($provincialHeadSignaturePath) }};base64,{{ base64_encode(file_get_contents($provincialHeadSignaturePath)) }}" alt="Signature" style="max-height: 100px;">
-                    @else
-                        _________________________<br>
-                    @endif
-                    {{ $report->status === 'approved' ? ($report->assignedProvincialHead->name ?? 'Provincial Head') : 'Pending Approval' }}
-
-                </td>
-            </tr>
+                            </tr>
         </table>
     </div>
 

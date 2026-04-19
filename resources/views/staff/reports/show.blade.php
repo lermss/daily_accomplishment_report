@@ -1,6 +1,10 @@
 @extends('staff.layouts.app')
 
 @section('content')
+@php
+    // ADD THIS CODE
+    $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix(optional(\App\Models\User::find(session('authenticated_user_id')))->role);
+@endphp
 
 <style>
 body {
@@ -116,7 +120,7 @@ body {
 }
 </style>
 
-<a href="{{ route('staff.reports.index') }}" class="btn btn-secondary mb-3">
+<a href="{{ route($staffRouteBase . '.reports.index') }}" class="btn btn-secondary mb-3">
     &lt; Back
 </a>
 
@@ -140,7 +144,7 @@ body {
         <h5 class="mt-2">{{ $report->file_name }}</h5>
     </div>
 
-    <form id="updateForm" action="{{ route('staff.reports.update',$report->id) }}" method="POST">
+    <form id="updateForm" action="{{ route($staffRouteBase . '.reports.update',$report->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -204,41 +208,22 @@ body {
         @endif
 
         @if($report->status !== 'approved')
-        <form id="submitReportForm" action="{{ route('staff.reports.submit',$report->id) }}" method="POST" style="display: contents;">
+        <form id="submitReportForm" action="{{ route($staffRouteBase . '.reports.submit',$report->id) }}" method="POST" style="display: contents;">
             @csrf
-            <button type="button" class="btn btn-success" id="submitBtn" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">Submit</button>
+            <button type="button" class="btn btn-success" id="submitBtn">Submit</button>
         </form>
         @endif
 
         <button 
             class="btn btn-danger {{ in_array($report->status, ['pending', 'for_revision']) ? 'opacity-50 cursor-not-allowed' : '' }}"
             {{ in_array($report->status, ['pending', 'for_revision']) ? 'disabled title="PDF export is unavailable while status is pending or for revision"' : '' }}
-            onclick="if (!{{ in_array($report->status, ['pending', 'for_revision']) ? 'true' : 'false' }}) window.location.href='{{ route('staff.reports.pdf',$report->id) }}'"
+            onclick="if (!{{ in_array($report->status, ['pending', 'for_revision']) ? 'true' : 'false' }}) window.location.href='{{ route($staffRouteBase . '.reports.pdf',$report->id) }}'"
         >
             Export PDF
         </button>
 
     </div>
 
-</div>
-
-<!-- Submit Confirmation Modal -->
-<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="submitConfirmModalLabel">Confirm Submission</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Once submitted, this report will be reviewed by the Provincial Head. Please confirm that all information is complete and accurate before proceeding.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmSubmitBtn">Yes, Submit</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -306,16 +291,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Submit confirmation modal
     const submitBtn = document.getElementById('submitBtn');
-    const submitConfirmModal = document.getElementById('submitConfirmModal');
-    const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
     const submitReportForm = document.getElementById('submitReportForm');
 
-    if (confirmSubmitBtn && submitReportForm) {
-        confirmSubmitBtn.addEventListener('click', function() {
-            // Submit the actual form
-            submitReportForm.submit();
+    if (submitBtn && submitReportForm) {
+        submitBtn.addEventListener('click', function() {
+            if (typeof window.openStaffConfirmModal !== 'function') {
+                submitReportForm.submit();
+                return;
+            }
+
+            window.openStaffConfirmModal({
+                title: 'Confirm Submission',
+                message: 'Once submitted, this report will be reviewed by the Provincial Head. Please confirm that all information is complete and accurate before proceeding.',
+                confirmText: 'Submit',
+                cancelText: 'Cancel',
+                variant: 'success',
+                onConfirm: function () {
+                    submitReportForm.submit();
+                }
+            });
         });
     }
 });

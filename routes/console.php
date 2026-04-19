@@ -50,3 +50,21 @@ Artisan::command('auth:create-super-admin {email} {name?}', function (string $em
 
     return self::SUCCESS;
 })->purpose('Bootstrap the first active super_admin account for OTP login');
+
+// Audit Log Cleanup Command
+Artisan::command('audit:cleanup', function () {
+    $this->info('Starting audit log cleanup...');
+
+    $cutoffDate = now()->subDays(21);
+    $deletedCount = \App\Models\ActivityLog::where('created_at', '<', $cutoffDate)->delete();
+
+    $this->info("Deleted {$deletedCount} audit log records older than 21 days.");
+
+    if ($deletedCount > 0) {
+        $this->comment("Cleanup completed successfully. Database optimized.");
+    } else {
+        $this->comment("No old audit logs found to clean up.");
+    }
+
+    return self::SUCCESS;
+})->purpose('Delete audit log records older than 21 days to optimize database performance');

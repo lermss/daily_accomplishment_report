@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AdminPortalService;
 use App\Services\AuthFlowService;
+use App\Services\SuperAdminNotificationService;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthFlowService $authFlowService,
         private readonly AdminPortalService $adminPortalService,
+        private readonly SuperAdminNotificationService $superAdminNotificationService,
     ) {
     }
 
@@ -38,6 +40,17 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email' => ['required', 'email'],
         ]);
+
+        $remaining = $this->authFlowService->otpRequestCooldownRemaining($validated['email'], $request);
+
+        if ($remaining > 0) {
+            // ADD THIS CODE: summarize blocked repeat OTP requests for super admin review.
+            $this->superAdminNotificationService->recordOtpAbuseAttempt($validated['email'], $request, $remaining);
+
+            return redirect()
+                ->route('auth.verify-form', ['email' => $validated['email']])
+                ->with('status', 'A login code was already requested. Please wait ' . $remaining . ' seconds before requesting another OTP.');
+        }
 
         try {
             $user = $this->authFlowService->findManagedActiveUserByEmail($validated['email']);
@@ -67,6 +80,13 @@ class AuthController extends Controller
         } catch (\Throwable) {
             $this->authFlowService->clearOtp($user);
             $this->authFlowService->forgetOtpSession($request);
+            $this->superAdminNotificationService->recordSystemAlert(
+                'OTP delivery issue detected',
+                'The system could not send a login OTP for ' . $user->email . '.',
+                'View Details',
+                route('audit.index', ['activity' => 'otp_requested']),
+                'otp-delivery-failure:' . now()->format('Y-m-d-H')
+            );
 
             return redirect()
                 ->route('login')
@@ -97,9 +117,11 @@ class AuthController extends Controller
             return redirect()->route('login')->with('error', 'Please enter your email to request a new OTP.');
         }
 
-        $remaining = $this->authFlowService->otpCooldownRemaining($request);
+        $remaining = $this->authFlowService->otpRequestCooldownRemaining($email, $request);
 
         if ($remaining > 0) {
+            // ADD THIS CODE: summarized abuse signal for resend hammering.
+            $this->superAdminNotificationService->recordOtpAbuseAttempt($email, $request, $remaining);
             return back()->with('error', 'Please wait ' . $remaining . ' seconds before resending the OTP.');
         }
 
@@ -119,6 +141,13 @@ class AuthController extends Controller
             $this->authFlowService->dispatchOtp($user, $request);
             $this->adminPortalService->logActivity($user, 'otp_resent', 'OTP resent for sign in.');
         } catch (\Throwable) {
+            $this->superAdminNotificationService->recordSystemAlert(
+                'OTP resend issue detected',
+                'The system could not resend a login OTP for ' . $user->email . '.',
+                'View Details',
+                route('audit.index', ['activity' => 'otp_requested']),
+                'otp-resend-failure:' . now()->format('Y-m-d-H')
+            );
             return back()->with('error', 'The login code could not be resent right now. Please try again.');
         }
 
@@ -321,10 +350,11 @@ class AuthController extends Controller
 
         return redirect()->route(match ($user->role) {
             'staff',
-            'interns',
             'admin',
             'ph-admin',
             'hr-super-admin' => 'home_page',
+            // ADD THIS CODE
+            'interns' => $this->authFlowService->staffPortalRoute($user->role, 'home'),
             default => $this->authFlowService->dashboardRoute($user->role),
         });
     }

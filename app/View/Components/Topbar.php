@@ -4,6 +4,7 @@ namespace App\View\Components;
 
 use App\Models\User;
 use App\Services\AuthFlowService;
+use App\Services\SuperAdminNotificationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,8 @@ class Topbar extends Component
     public string $notificationRoute;
     public Collection $submissionNotifications;
     public int $pendingNotificationsCount;
+    public Collection $superAdminNotifications;
+    public int $superAdminUnreadCount;
 
     public function __construct(
         public string $active = 'home',
@@ -30,11 +33,20 @@ class Topbar extends Component
         $this->isSuperAdminNavigation = $this->user !== null && $authFlowService->isSuperAdminRole($this->user->role);
         $this->canViewNotifications = $this->isAdminNavigation || $this->isSuperAdminNavigation;
         $this->reportsRoute = $this->isSuperAdminNavigation ? route('reports.index') : route('admin.dashboard.employees');
-        $this->notificationRoute = $this->isSuperAdminNavigation ? route('reports.pending') : route('admin.dashboard.pending');
+        $this->notificationRoute = $this->isSuperAdminNavigation ? route('super-admin.notifications.index') : route('admin.dashboard.pending');
         $this->submissionNotifications = collect();
         $this->pendingNotificationsCount = 0;
+        $this->superAdminNotifications = collect();
+        $this->superAdminUnreadCount = 0;
 
-        if ($this->canViewNotifications) {
+        // ADD THIS CODE: custom super admin notifications are kept separate from the
+        // existing admin/ph-admin pending submission preview.
+        if ($this->isSuperAdminNavigation) {
+            $notificationService = app(SuperAdminNotificationService::class);
+            $notificationService->refreshSummaryNotifications();
+            $this->superAdminNotifications = $notificationService->latestPreview(5);
+            $this->superAdminUnreadCount = $notificationService->unreadCount();
+        } elseif ($this->canViewNotifications) {
             $this->submissionNotifications = DB::table('reports')
                 ->leftJoin('users', 'users.id', '=', 'reports.user_id')
                 ->where('reports.status', 'pending')

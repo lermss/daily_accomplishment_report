@@ -65,7 +65,8 @@ class ProfileController extends Controller
         $this->adminPortalService->updateProfile($user, $request, $validated);
 
         $redirectRoute = in_array((string) $user->role, ['staff', 'interns'], true)
-            ? 'staff.profile'
+            // ADD THIS CODE
+            ? $this->authFlowService->staffPortalRoute($user->role, 'profile')
             : 'profile.edit';
 
         return redirect()->route($redirectRoute)->with('profile_status', 'Profile updated successfully.');

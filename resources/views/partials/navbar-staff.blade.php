@@ -1,11 +1,14 @@
 @php
     $staffLayoutUserId = session('authenticated_user_id');
     $staffLayoutUser = $staffLayoutUserId ? \App\Models\User::find($staffLayoutUserId) : null;
+    // ADD THIS CODE
+    $staffPortalPrefix = app(\App\Services\AuthFlowService::class)->staffPortalPrefix($staffLayoutUser?->role);
+    $staffPortalLabel = (string) $staffLayoutUser?->role === 'interns' ? 'Intern' : 'Staff';
     $staffNotifications = collect();
     $staffUnreadNotificationsCount = 0;
     $staffHasNotificationsReadColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'notifications_read_at');
 
-    if ($staffLayoutUser && in_array((string) $staffLayoutUser->role, ['staff', 'special_access'], true)) {
+    if ($staffLayoutUser && in_array((string) $staffLayoutUser->role, ['staff', 'interns', 'special_access'], true)) {
         $staffNotifications = \App\Models\Report::query()
             ->where('user_id', $staffLayoutUser->id)
             ->whereIn('status', [\App\Models\Report::STATUS_APPROVED, \App\Models\Report::STATUS_FOR_REVISION])
@@ -35,19 +38,25 @@
     </div>
 
     <div class="nav-right">
-        <a href="{{ route('staff.home') }}" class="{{ request()->routeIs('staff.home') ? 'active' : '' }}">
+        <a href="{{ route($staffPortalPrefix . '.home') }}" class="{{ request()->routeIs('staff.home') || request()->routeIs('intern.home') ? 'active' : '' }}">
             Home
         </a>
-        <a href="{{ route('staff.dashboard') }}" class="{{ request()->routeIs('staff.dashboard') || request()->routeIs('dashboard.staff') ? 'active' : '' }}">
+        <a href="{{ route($staffPortalPrefix . '.dashboard') }}" class="{{ request()->routeIs('staff.dashboard') || request()->routeIs('intern.dashboard') || request()->routeIs('dashboard.staff') || request()->routeIs('dashboard.intern') ? 'active' : '' }}">
             Dashboard
         </a>
-        <a href="{{ route('staff.reports') }}" class="{{ request()->routeIs('staff.reports') || request()->routeIs('staff.reports.*') ? 'active' : '' }}">
+        <a href="{{ route($staffPortalPrefix . '.reports') }}" class="{{ request()->routeIs('staff.reports') || request()->routeIs('staff.reports.*') || request()->routeIs('intern.reports') || request()->routeIs('intern.reports.*') ? 'active' : '' }}">
             Reports
         </a>
-        <div class="notification-wrapper position-relative">
+        @if ((string) $staffLayoutUser?->role === 'interns')
+            {{-- // ADD THIS CODE --}}
+            <a href="{{ route('intern.audit.index') }}" class="{{ request()->routeIs('intern.audit.index') ? 'active' : '' }}">
+                Audit Log
+            </a>
+        @endif
+        <div class="notification-menu" data-notification-menu>
             <button
                 type="button"
-                class="notification-trigger border-0 bg-transparent p-0"
+                class="notification-trigger notification-toggle"
                 aria-label="View notifications"
                 aria-haspopup="true"
                 aria-expanded="false"
@@ -62,37 +71,40 @@
                 @endif
             </button>
 
-            <div class="notification-panel position-absolute end-0 mt-2 shadow border rounded bg-white" data-notification-panel hidden style="min-width: 320px; max-width: 420px; z-index: 1050;">
-                <div class="notification-panel-header d-flex justify-content-between align-items-center py-2 border-bottom">
-                    <strong class="m-0">Notifications</strong>
-                    <a href="{{ route('staff.dashboard') }}" class="text-decoration-none small">View all</a>
+            <div class="notification-panel" data-notification-panel hidden>
+                <div class="notification-panel-header">
+                    <div>
+                        <strong>Notifications</strong>
+                        {{-- // ADD THIS CODE --}}
+                        <p class="notification-panel-subtitle">Latest {{ strtolower($staffPortalLabel) }} report submissions and review alerts.</p>
+                    </div>
+                    <a href="{{ route($staffPortalPrefix . '.dashboard') }}">View all</a>
                 </div>
-                <div class="notification-panel-body " id="staffNotificationsList">
+                <div class="notification-panel-body" id="staffNotificationsList">
                     @forelse ($staffNotifications as $notification)
-                        <a href="{{ route('staff.reports.show', $notification->id) }}" class="staff-notification-item-link text-decoration-none" data-notification-id="{{ $notification->id }}">
-                            <div class="staff-notification-item ">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <div class="fw-semibold">
-                                            {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : 'Your report needs revision' }}
-                                        </div>
-                                        <div class="text-muted small">{{ $notification->file_name ?: 'Untitled report' }}</div>
-                                        <div class="text-muted small">{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</div>
-                                    </div>
-                                    <span class="staff-notification-status {{ $notification->status }}">
+                        <a href="{{ route($staffPortalPrefix . '.reports.show', $notification->id) }}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="{{ $notification->id }}">
+                            <span class="notification-indicator" aria-hidden="true"></span>
+                            <span class="notification-copy">
+                                <span class="notification-title">
+                                    {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : 'Your report needs revision' }}
+                                </span>
+                                <span class="notification-description">{{ $notification->file_name ?: 'Untitled report' }}</span>
+                                <span class="notification-meta">
+                                    <small>{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</small>
+                                    <span class="notification-status {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'notification-status--success' : 'notification-status--warning' }}">
                                         {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : 'Needs Revision' }}
                                     </span>
-                                </div>
-                            </div>
+                                </span>
+                            </span>
                         </a>
                     @empty
-                        <p class="text-muted mb-0" id="staffNotificationsEmpty">No report notifications yet.</p>
+                        <p class="notification-empty" id="staffNotificationsEmpty">No report notifications yet.</p>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        <a href="{{ route('staff.profile') }}" aria-label="Profile">
+        <a href="{{ route($staffPortalPrefix . '.profile') }}" aria-label="Profile">
             <i class="fa-regular fa-user"></i>
         </a>
     </div>
@@ -104,13 +116,13 @@
         const notificationPanel = document.querySelector('[data-notification-panel]');
         const notificationsList = document.getElementById('staffNotificationsList');
         const notificationBadge = document.getElementById('staffNotificationBadge');
-        const notificationWrapper = toggleButton?.closest('.notification-wrapper');
+        const notificationWrapper = toggleButton?.closest('.notification-menu');
 
         if (!toggleButton || !notificationPanel || !notificationsList) {
             return;
         }
 
-        const emptyMarkup = '<p class="text-muted mb-0" id="staffNotificationsEmpty">No report notifications yet.</p>';
+        const emptyMarkup = '<p class="notification-empty" id="staffNotificationsEmpty">No report notifications yet.</p>';
 
         const updateBadge = (count) => {
             if (!notificationBadge) {
@@ -133,22 +145,21 @@
             }
 
             notificationsList.innerHTML = notifications.map((notification) => {
-                const statusClass = notification.status === 'approved' ? 'approved' : 'for_revision';
+                const statusClass = notification.status === 'approved' ? 'notification-status--success' : 'notification-status--warning';
                 const statusLabel = notification.status === 'approved' ? 'Approved' : 'Needs Revision';
-                const reviewedAt = notification.reviewed_at ? `<div class="text-muted small">${notification.reviewed_at}</div>` : '';
+                const reviewedAt = notification.reviewed_at ? `<small>${notification.reviewed_at}</small>` : '<small>Just now</small>';
 
                 return `
-                    <a href="${notification.route}" class="staff-notification-item-link text-decoration-none" data-notification-id="${notification.id}">
-                        <div class="staff-notification-item mb-2">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <div class="fw-semibold">${notification.message}</div>
-                                    <div class="text-muted small">${notification.file_name || 'Untitled report'}</div>
-                                    ${reviewedAt}
-                                </div>
-                                <span class="staff-notification-status ${statusClass}">${statusLabel}</span>
-                            </div>
-                        </div>
+                    <a href="${notification.route}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="${notification.id}">
+                        <span class="notification-indicator" aria-hidden="true"></span>
+                        <span class="notification-copy">
+                            <span class="notification-title">${notification.message}</span>
+                            <span class="notification-description">${notification.file_name || 'Untitled report'}</span>
+                            <span class="notification-meta">
+                                ${reviewedAt}
+                                <span class="notification-status ${statusClass}">${statusLabel}</span>
+                            </span>
+                        </span>
                     </a>
                 `;
             }).join('');
@@ -159,7 +170,8 @@
 
         const fetchNotifications = async () => {
             try {
-                const response = await fetch("{{ route('staff.notifications.index') }}", {
+                // ADD THIS CODE
+                const response = await fetch("{{ route($staffPortalPrefix . '.notifications.index') }}", {
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
@@ -179,7 +191,8 @@
 
         const markNotificationsRead = async () => {
             try {
-                const response = await fetch("{{ route('staff.notifications.read') }}", {
+                // ADD THIS CODE
+                const response = await fetch("{{ route($staffPortalPrefix . '.notifications.read') }}", {
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',

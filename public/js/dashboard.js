@@ -35,12 +35,16 @@
         });
     });
 
-    confirmCancel?.addEventListener("click", () => setConfirmVisible(false));
+    confirmCancel?.addEventListener("click", () => {
+        setConfirmVisible(false);
+        pendingForm = null;
+    });
     confirmSubmit?.addEventListener("click", () => pendingForm?.submit());
 
     confirmModal?.addEventListener("click", (event) => {
         if (event.target === confirmModal) {
             setConfirmVisible(false);
+            pendingForm = null;
         }
     });
 

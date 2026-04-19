@@ -183,6 +183,7 @@ class AdminPortalService
                     ->orderBy('start_date')
                     ->orderBy('id'),
             ])
+            ->where('is_hidden_from_admin_dashboard', false)
             ->whereIn('status', ['pending', 'approved', 'for_revision'])
             ->tap(fn ($query) => $this->provincialHeadAssignmentService->scopeReportsForReviewer($query, $user))
             ->when($effectiveStatus !== null, fn ($query) => $query->where('status', $effectiveStatus))

@@ -1,19 +1,15 @@
 @extends('staff.layouts.app')
 
 @section('content')
+@php
+    // ADD THIS CODE
+    $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix(optional(\App\Models\User::find(session('authenticated_user_id')))->role);
+@endphp
 
 <link rel="stylesheet" href="{{ asset('css/admin-reports.css') }}?v={{ filemtime(public_path('css/admin-reports.css')) }}">
 <link rel="stylesheet" href="{{ asset('css/shared-dashboard-theme.css') }}?v={{ filemtime(public_path('css/shared-dashboard-theme.css')) }}">
 
 <style>
-    /* =====================================================
-       Staff Reports Responsive Overrides
-       -----------------------------------------------------
-       Goal:
-       - keep the current desktop composition
-       - prevent overflow on tablet/mobile
-       - let search/table use available width cleanly
-       ===================================================== */
     .admin-reports-page {
         --staff-reports-content-width: min(1162px, calc(100vw - 72px));
         --staff-reports-search-width: min(660px, 100%);
@@ -185,7 +181,6 @@
         .admin-reports-page .summary-icon {
             width: 54px;
             height: 54px;
-            
         }
 
         .admin-reports-page .summary-value-row strong {
@@ -217,21 +212,19 @@
                             Last update: {{ $reports->first()?->updated_at?->format('m/d/Y h:i A') ?? 'No updates yet' }}
                         </span>
                     </div>
-                                <a href="{{ route('staff.reports.create') }}" class="action-button" aria-label="Add new report">
-                <svg viewBox="0 0 24 24"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>
-                <span>Add Report</span>
-            </a>
+                    <a href="{{ route($staffRouteBase . '.reports.create') }}" class="action-button" aria-label="Add new report">
+                        <svg viewBox="0 0 24 24"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>
+                        <span>Add Report</span>
+                    </a>
                 </article>
             </div>
-
-
         </div>
 
         <section class="table-panel">
             <div class="table-toolbar">
                 <div class="report-filters-row">
                     <div class="filters">
-                        <form method="GET" action="{{ route('staff.reports') }}" class="search-form report-search-form" id="reportSearchForm">
+                        <form method="GET" action="{{ route($staffRouteBase . '.reports') }}" class="search-form report-search-form" id="reportSearchForm">
                             <div class="search-input-wrapper">
                                 <input
                                     type="search"
@@ -250,14 +243,12 @@
                                 <button type="submit" aria-label="Search reports" class="search-submit">
                                     <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.87 10.59l4.27 4.27a1 1 0 0 0 1.42-1.42l-4.27-4.27A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1-4 4 4 4 0 0 1 4-4Z"/></svg>
                                 </button>
-
                             </div>
                         </form>
                     </div>
-
                 </div>
             </div>
-            
+
             <div class="table-wrap">
                 @forelse($reports as $report)
                     @if ($loop->first)
@@ -285,7 +276,7 @@
 
                     <tr>
                         <td>
-                            <a href="{{ route('staff.reports.show',$report->id) }}" class="report-title">
+                            <a href="{{ route($staffRouteBase . '.reports.show',$report->id) }}" class="report-title">
                                 {{ $report->file_name }}
                             </a>
                         </td>
@@ -306,7 +297,7 @@
 
                         <td class="text-end">
                             <div class="table-actions">
-                                <button 
+                                <button
                                     class="icon-action icon-action-edit"
                                     data-bs-toggle="modal"
                                     data-bs-target="#reportActionModal"
@@ -318,11 +309,10 @@
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
 
-                                <button 
+                                <button
+                                    type="button"
                                     class="icon-action icon-action-delete"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#reportActionModal"
-                                    data-action="delete"
+                                    data-delete-report
                                     data-report-id="{{ $report->id }}"
                                     data-file-name="{{ $report->file_name }}"
                                     title="Delete report"
@@ -362,25 +352,22 @@
     </div>
 </div>
 
-<!-- REUSABLE ACTION MODAL -->
 <div class="modal fade" id="reportActionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
-            <!-- EDIT MODAL CONTENT -->
             <div id="editModalContent" style="display: none;">
                 <form id="editForm" method="POST">
                     @csrf
                     @method('PUT')
-                    
+
                     <div class="modal-header">
                         <h5 class="modal-title">Edit File Name</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             id="fileNameInput"
                             name="file_name"
                             class="form-control"
@@ -399,30 +386,6 @@
                     </div>
                 </form>
             </div>
-
-            <!-- DELETE MODAL CONTENT -->
-            <div id="deleteModalContent" style="display: none;">
-                <div style="padding: 24px; text-align: center;">
-                    <h5 class="text-danger" style="margin-bottom: 12px;">Delete Report</h5>
-                    <p style="margin-bottom: 8px; color: #64748b;">Are you sure you want to delete this report?</p>
-                    <strong id="deleteFileName" style="display: block; margin-bottom: 24px; color: #17324b;"></strong>
-
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <form id="deleteForm" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" id="submitDeleteBtn">
-                                <span class="submit-text">Delete Report</span>
-                                <span class="submit-spinner" style="display: none;">
-                                    <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
-                                </span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
@@ -430,36 +393,26 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('reportActionModal');
-
-    // ✅ Generate URLs with placeholder
-    const updateFileUrlTemplate = "{{ route('staff.reports.updateFile', ['id' => '__REPORT_ID__']) }}";
-    const deleteUrlTemplate = "{{ route('staff.reports.destroy', ['id' => '__REPORT_ID__']) }}";
+    const deleteButtons = document.querySelectorAll('[data-delete-report]');
+    // ADD THIS CODE
+    const updateFileUrlTemplate = "{{ route($staffRouteBase . '.reports.updateFile', ['id' => '__REPORT_ID__']) }}";
+    const deleteUrlTemplate = "{{ route($staffRouteBase . '.reports.destroy', ['id' => '__REPORT_ID__']) }}";
 
     modal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
         const action = button.getAttribute('data-action');
         const reportId = button.getAttribute('data-report-id');
         const fileName = button.getAttribute('data-file-name');
-
         const editContent = document.getElementById('editModalContent');
-        const deleteContent = document.getElementById('deleteModalContent');
 
         if (action === 'edit') {
             editContent.style.display = 'block';
-            deleteContent.style.display = 'none';
             document.getElementById('fileNameInput').value = fileName;
-            // ✅ Replace placeholder with actual ID
             document.getElementById('editForm').action = updateFileUrlTemplate.replace('__REPORT_ID__', reportId);
             document.getElementById('fileNameInput').focus();
-        } else if (action === 'delete') {
-            editContent.style.display = 'none';
-            deleteContent.style.display = 'block';
-            document.getElementById('deleteFileName').textContent = fileName;
-            document.getElementById('deleteForm').action = deleteUrlTemplate.replace('__REPORT_ID__', reportId);
         }
     });
 
-    // Add loading state to forms
     document.getElementById('editForm').addEventListener('submit', function() {
         const submitBtn = document.getElementById('submitEditBtn');
         const text = submitBtn.querySelector('.submit-text');
@@ -469,19 +422,44 @@ document.addEventListener('DOMContentLoaded', function() {
         spinner.style.display = 'inline-flex';
     });
 
-    document.getElementById('deleteForm').addEventListener('submit', function() {
-        const submitBtn = document.getElementById('submitDeleteBtn');
-        const text = submitBtn.querySelector('.submit-text');
-        const spinner = submitBtn.querySelector('.submit-spinner');
-        submitBtn.disabled = true;
-        text.style.display = 'none';
-        spinner.style.display = 'inline-flex';
+    deleteButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const reportId = button.getAttribute('data-report-id');
+            const fileName = button.getAttribute('data-file-name');
+
+            if (!reportId) {
+                return;
+            }
+
+            const deleteAction = deleteUrlTemplate.replace('__REPORT_ID__', reportId);
+
+            const submitDelete = function () {
+                const deleteForm = document.createElement('form');
+                deleteForm.method = 'POST';
+                deleteForm.action = deleteAction;
+                deleteForm.innerHTML = '@csrf @method("DELETE")';
+                document.body.appendChild(deleteForm);
+                deleteForm.submit();
+            };
+
+            if (typeof window.openStaffConfirmModal !== 'function') {
+                submitDelete();
+                return;
+            }
+
+            window.openStaffConfirmModal({
+                title: 'Delete Report',
+                message: `Are you sure you want to delete "${fileName}"?`,
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                variant: 'danger',
+                onConfirm: submitDelete
+            });
+        });
     });
 
-    // Reset modal content when closed
     modal.addEventListener('hidden.bs.modal', function() {
         document.getElementById('editModalContent').style.display = 'none';
-        document.getElementById('deleteModalContent').style.display = 'none';
     });
 });
 </script>

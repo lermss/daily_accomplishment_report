@@ -34,7 +34,7 @@ class StaffNotificationController extends Controller
             ->orderByDesc('reviewed_at')
             ->limit(10)
             ->get(['id', 'file_name', 'status', 'reviewed_at', 'review_comment'])
-            ->map(function (Report $report) {
+            ->map(function (Report $report) use ($user) {
                 return [
                     'id' => $report->id,
                     'status' => $report->status,
@@ -44,7 +44,8 @@ class StaffNotificationController extends Controller
                     'comment' => $report->review_comment,
                     'file_name' => $report->file_name ?: 'Untitled report',
                     'reviewed_at' => $report->reviewed_at?->format('M d, Y h:i A'),
-                    'route' => route('staff.reports.show', ['id' => $report->id]),
+                    // ADD THIS CODE
+                    'route' => route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($user->role, 'reports.show'), ['id' => $report->id]),
                 ];
             })
             ->values();

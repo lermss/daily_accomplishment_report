@@ -49,6 +49,7 @@ class DashboardController extends Controller
         */
         $reportsQuery = Report::query()
             ->where('user_id', $user->id)
+            ->where('is_hidden_from_staff_dashboard', false)
             ->whereIn('status', [
                 Report::STATUS_PENDING,
                 Report::STATUS_APPROVED,
@@ -115,5 +116,27 @@ class DashboardController extends Controller
             'statusFilter',
             'searchTerm'
         ));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $user = $this->authFlowService->requireAuthenticated(
+            $request,
+            fn ($user) => in_array((string) $user->role, ['staff', 'interns'], true)
+        );
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        $reportIds = $request->input('report_ids', []);
+        
+        if (!empty($reportIds)) {
+            Report::whereIn('id', $reportIds)
+                ->where('user_id', $user->id)
+                ->update(['is_hidden_from_staff_dashboard' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Selected reports have been DELETE from your dashboard.');
     }
 }

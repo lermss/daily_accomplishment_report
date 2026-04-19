@@ -43,10 +43,148 @@
 
     {{-- Reusable modal for viewing report details and review actions. --}}
     @include('admin.partials.reports-modal')
+
+    <div class="delete-confirm-modal" data-delete-confirm-modal hidden>
+        <div class="delete-confirm-modal__backdrop" data-delete-confirm-close></div>
+        <section class="delete-confirm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
+            <div class="delete-confirm-modal__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v8h-2V9Zm4 0h2v8h-2V9ZM7 9h2v8H7V9Zm-1 11h12a2 2 0 0 0 2-2V8H4v10a2 2 0 0 0 2 2Z"/></svg>
+            </div>
+            <div class="delete-confirm-modal__copy">
+                <h2 id="delete-confirm-title">Confirm Delete</h2>
+                <p data-delete-confirm-message>Are you sure you want to delete this report?</p>
+            </div>
+            <div class="delete-confirm-modal__actions">
+                <button type="button" class="delete-confirm-button delete-confirm-button--secondary" data-delete-confirm-cancel>Cancel</button>
+                <button type="button" class="delete-confirm-button delete-confirm-button--danger" data-delete-confirm-submit>Delete</button>
+            </div>
+        </section>
+    </div>
 @endsection
 
 {{-- JavaScript files used for shared filtering helpers and report dashboard interactions. --}}
 @push('scripts')
     <script src="{{ asset('js/search-filter.js') }}" defer></script>
     <script src="{{ asset('js/admin-reports.js') }}?v={{ filemtime(public_path('js/admin-reports.js')) }}" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Bulk delete functionality
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const reportCheckboxes = document.querySelectorAll('.report-checkbox:not([disabled])');
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+            const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+            const deleteConfirmModal = document.querySelector('[data-delete-confirm-modal]');
+            const deleteConfirmMessage = document.querySelector('[data-delete-confirm-message]');
+            const deleteConfirmCancel = document.querySelector('[data-delete-confirm-cancel]');
+            const deleteConfirmSubmit = document.querySelector('[data-delete-confirm-submit]');
+            const deleteConfirmCloseTargets = document.querySelectorAll('[data-delete-confirm-close]');
+            let pendingDeleteSubmission = null;
+
+            function openDeleteConfirm(message, onConfirm) {
+                if (!deleteConfirmModal || !deleteConfirmMessage || !deleteConfirmSubmit) {
+                    if (typeof onConfirm === 'function') {
+                        onConfirm();
+                    }
+                    return;
+                }
+
+                pendingDeleteSubmission = onConfirm;
+                deleteConfirmMessage.textContent = message;
+                deleteConfirmModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                deleteConfirmSubmit.focus();
+            }
+
+            function closeDeleteConfirm() {
+                if (!deleteConfirmModal) {
+                    return;
+                }
+
+                deleteConfirmModal.hidden = true;
+                document.body.style.overflow = '';
+                pendingDeleteSubmission = null;
+            }
+
+            function updateDeleteButton() {
+                const checkedBoxes = document.querySelectorAll('.report-checkbox:checked');
+                deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+            }
+
+            selectAllCheckbox.addEventListener('change', function() {
+                reportCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateDeleteButton();
+            });
+
+            reportCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(reportCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(reportCheckboxes).some(cb => cb.checked);
+                    
+                    selectAllCheckbox.checked = allChecked;
+                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                    
+                    updateDeleteButton();
+                });
+            });
+
+            bulkDeleteForm.addEventListener('submit', function(e) {
+                const checkedBoxes = document.querySelectorAll('.report-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+
+                e.preventDefault();
+                openDeleteConfirm(
+                    `Are you sure you want to delete ${checkedBoxes.length} selected approved report(s)?`,
+                    function () {
+                        closeDeleteConfirm();
+                        bulkDeleteForm.submit();
+                    }
+                );
+            });
+
+            deleteSelectedBtn.addEventListener('click', function() {
+                const checkedBoxes = document.querySelectorAll('.report-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    return;
+                }
+
+                openDeleteConfirm(
+                    `Are you sure you want to delete ${checkedBoxes.length} selected approved report(s)?`,
+                    function () {
+                        closeDeleteConfirm();
+                        bulkDeleteForm.submit();
+                    }
+                );
+            });
+
+            deleteConfirmCloseTargets.forEach(function (element) {
+                element.addEventListener('click', closeDeleteConfirm);
+            });
+
+            if (deleteConfirmCancel) {
+                deleteConfirmCancel.addEventListener('click', closeDeleteConfirm);
+            }
+
+            if (deleteConfirmSubmit) {
+                deleteConfirmSubmit.addEventListener('click', function () {
+                    const submitAction = pendingDeleteSubmission;
+                    if (typeof submitAction === 'function') {
+                        submitAction();
+                    } else {
+                        closeDeleteConfirm();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && deleteConfirmModal && !deleteConfirmModal.hidden) {
+                    closeDeleteConfirm();
+                }
+            });
+        });
+    </script>
 @endpush

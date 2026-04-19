@@ -613,7 +613,8 @@ button[disabled] {
 .review-comment[hidden],
 .modal-primary-button[hidden],
 .modal-secondary-button[hidden],
-.download-link[hidden] {
+.download-link[hidden],
+.delete-confirm-modal[hidden] {
     display: none;
 }
 
@@ -897,6 +898,123 @@ button[disabled] {
     color: var(--reports-text-muted);
 }
 
+.delete-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.delete-confirm-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(5px);
+}
+
+.delete-confirm-modal__dialog {
+    position: relative;
+    width: min(440px, 100%);
+    padding: 30px 28px 24px;
+    border: 1px solid rgba(223, 232, 241, 0.95);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top, rgba(254, 226, 226, 0.72), rgba(255, 255, 255, 0) 42%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+    box-shadow: var(--reports-shadow-modal);
+    text-align: center;
+}
+
+.delete-confirm-modal__icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 18px;
+    border-radius: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: var(--reports-danger-strong);
+    box-shadow: 0 16px 28px rgba(220, 38, 38, 0.16);
+}
+
+.delete-confirm-modal__icon svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+}
+
+.delete-confirm-modal__copy h2 {
+    margin-bottom: 10px;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    color: var(--reports-text-strong);
+}
+
+.delete-confirm-modal__copy p {
+    margin: 0 auto;
+    max-width: 30ch;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--reports-text-soft);
+}
+
+.delete-confirm-modal__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.delete-confirm-button {
+    min-width: 132px;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.delete-confirm-button:hover {
+    transform: translateY(-1px);
+}
+
+.delete-confirm-button--secondary {
+    border-color: var(--reports-border-soft);
+    background: #ffffff;
+    color: #52667a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.delete-confirm-button--secondary:hover {
+    border-color: #c2d3e3;
+    background: #f8fbfe;
+    color: var(--reports-text-strong);
+}
+
+.delete-confirm-button--danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 16px 28px rgba(220, 38, 38, 0.24);
+}
+
+.delete-confirm-button--danger:hover {
+    box-shadow: 0 20px 30px rgba(220, 38, 38, 0.28);
+}
+
+.delete-confirm-button:focus-visible {
+    outline: 3px solid rgba(220, 38, 38, 0.15);
+    outline-offset: 2px;
+}
+
 /* =========================================================
    Bootstrap Modal Overrides Used By Staff Reports Page
    ---------------------------------------------------------
@@ -1117,6 +1235,15 @@ button[disabled] {
     .report-modal {
         padding: 12px;
     }
+
+    .delete-confirm-modal {
+        padding: 16px;
+    }
+
+    .delete-confirm-modal__dialog {
+        padding: 24px 20px 20px;
+        border-radius: 24px;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1142,5 +1269,13 @@ button[disabled] {
 
     .modal-title {
         font-size: 0.88rem;
+    }
+
+    .delete-confirm-modal__actions {
+        flex-direction: column-reverse;
+    }
+
+    .delete-confirm-button {
+        width: 100%;
     }
 }

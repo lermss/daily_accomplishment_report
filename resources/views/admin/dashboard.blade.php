@@ -36,7 +36,7 @@
                     @include('admin.partials.dashboard-summary-cards')
                 @else
                     <div class="section-header">
-                        <a href="{{ route('dashboard') }}" class="back-link" aria-label="Back to dashboard">&lt;</a>
+                       
                         <div>
                             <h1>{{ $title }}</h1>
                             <div class="section-subcopy">
@@ -146,10 +146,7 @@
                                                             type="button"
                                                             class="row-action"
                                                             data-confirm-trigger
-                                                            data-form-id="archive-user-{{ $listedUser->id }}"
-                                                            data-confirm-title="Archive User Account?"
-                                                            data-confirm-message="{{ $displayName }} will no longer have access to the system. You can restore this account at any time from the Archive Users."
-                                                        >
+                                                            data-form-id="archive-user-{{ $listedUser->id }}" >
                                                             <svg viewBox="0 0 24 24"><path d="M12 5c5.23 0 9.27 4.62 10 6-.73 1.38-4.77 6-10 6S2.73 12.38 2 11c.73-1.38 4.77-6 10-6Zm0 2.5A3.5 3.5 0 1 0 15.5 11 3.5 3.5 0 0 0 12 7.5Zm-7.71 10.29 14-14 1.42 1.42-14 14Z"/></svg>
                                                         </button>
                                                     @else
@@ -160,14 +157,12 @@
                                                             type="button"
                                                             class="row-action row-action-restore"
                                                             data-confirm-trigger
-                                                            data-form-id="restore-user-{{ $listedUser->id }}"
-                                                            data-confirm-title="Restore User Account?"
-                                                            data-confirm-message="{{ $displayName }} will regain access to the system. You can archive the account again at any time."
-                                                        >
+                                                            data-form-id="restore-user-{{ $listedUser->id }}">
                                                             <svg viewBox="0 0 24 24"><path d="M12 5a7 7 0 1 1-6.92 8H3l2.75-3L8.5 13H6.94A5 5 0 1 0 12 7a4.94 4.94 0 0 0-3.13 1.1L7.45 6.68A7 7 0 0 1 12 5Z"/></svg>
                                                         </button>
                                                     @endif
                                                 @endif
+
 
                                                 @if ($canManageUsers && $mode !== 'reports')
                                                     <button type="button" class="row-action row-action-edit" data-open-user-modal data-mode="edit" data-user='@json($editPayload)'>

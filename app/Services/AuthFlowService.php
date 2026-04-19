@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -55,12 +56,30 @@ class AuthFlowService
         return ['super_admin', 'hr-super-admin', 'admin', 'ph-admin', 'staff', 'interns'];
     }
 
+    // ADD THIS CODE
+    public function isStaffRole(?string $role): bool
+    {
+        return User::isStaffRole($role);
+    }
+
+    // ADD THIS CODE
+    public function staffPortalPrefix(?string $role): string
+    {
+        return (string) $role === 'interns' ? 'intern' : 'staff';
+    }
+
+    // ADD THIS CODE
+    public function staffPortalRoute(?string $role, string $suffix): string
+    {
+        return $this->staffPortalPrefix($role) . '.' . ltrim($suffix, '.');
+    }
+
     public function dashboardRoute(?string $role): string
     {
         return match ($role) {
             'super_admin', 'hr-super-admin' => 'dashboard.super-admin',
             'admin', 'ph-admin' => 'dashboard.admin',
-            'staff', 'interns' => 'staff.home',
+            'staff', 'interns' => $this->staffPortalRoute($role, 'home'),
             default => 'login',
         };
     }
@@ -114,6 +133,7 @@ class AuthFlowService
         $request->session()->put('otp_login_email', $user->email);
         $request->session()->put('otp_expires_at', $expiresAt->toIso8601String());
         $request->session()->put('otp_requested_at', now()->toIso8601String());
+        $this->markOtpRequestCooldown($user->email, $request);
 
         Mail::raw(
             "Your login code is {$otp}\nThis code expires in 5 minutes.",
@@ -153,6 +173,21 @@ class AuthFlowService
         return now()->lt($availableAt) ? now()->diffInSeconds($availableAt) : 0;
     }
 
+    public function otpRequestCooldownRemaining(string $email, Request $request): int
+    {
+        $key = $this->otpCooldownKey($email, $request);
+        $rateLimitRemaining = RateLimiter::tooManyAttempts($key, 1)
+            ? RateLimiter::availableIn($key)
+            : 0;
+
+        return max($rateLimitRemaining, $this->otpCooldownRemaining($request));
+    }
+
+    public function markOtpRequestCooldown(string $email, Request $request): void
+    {
+        RateLimiter::hit($this->otpCooldownKey($email, $request), 90);
+    }
+
     public function otpExpiration(User $user, Request $request): ?Carbon
     {
         if ($this->safeHasColumn('users', 'otp_expiration') && $user->otp_expiration) {
@@ -190,5 +225,10 @@ class AuthFlowService
         } catch (\Throwable) {
             return $cache[$key] = false;
         }
+    }
+
+    private function otpCooldownKey(string $email, Request $request): string
+    {
+        return 'otp-cooldown:' . sha1(strtolower(trim($email)) . '|' . (string) $request->ip());
     }
 }

@@ -122,6 +122,12 @@ class User extends Authenticatable
         return in_array((string) $role, self::ADMIN_ROLES, true);
     }
 
+    // ADD THIS CODE
+    public static function isStaffRole(?string $role): bool
+    {
+        return in_array((string) $role, self::STAFF_ROLES, true);
+    }
+
     public function isProvincialHead(): bool
     {
         return $this->role === 'ph-admin';
