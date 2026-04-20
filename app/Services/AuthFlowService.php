@@ -6,11 +6,6 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 
 class AuthFlowService
 {
@@ -33,12 +28,9 @@ class AuthFlowService
     {
         $user = $this->authenticatedUser($request);
 
-        if (!$user || $user->status !== 'active') {
+        if (!$user || $user->status !== 'active' || ! $user->is_authorized) {
             $request->session()->forget([
                 'authenticated_user_id',
-                'otp_login_email',
-                'otp_expires_at',
-                'otp_requested_at',
             ]);
 
             return redirect()->route('login')->with('error', 'Please sign in to continue.');
@@ -111,124 +103,5 @@ class AuthFlowService
             ->where('status', 'active')
             ->whereIn('role', $this->managedRoles())
             ->first();
-    }
-
-    public function dispatchOtp(User $user, Request $request): string
-    {
-        $otp = (string) random_int(100000, 999999);
-        $expiresAt = now()->addMinutes(5);
-
-        $updates = ['otp_hash' => Hash::make($otp)];
-
-        if ($this->safeHasColumn('users', 'otp_expiration')) {
-            $updates['otp_expiration'] = $expiresAt;
-        }
-
-        if ($this->safeHasColumn('users', 'otp_code')) {
-            $updates['otp_code'] = null;
-        }
-
-        $user->forceFill($updates)->save();
-
-        $request->session()->put('otp_login_email', $user->email);
-        $request->session()->put('otp_expires_at', $expiresAt->toIso8601String());
-        $request->session()->put('otp_requested_at', now()->toIso8601String());
-        $this->markOtpRequestCooldown($user->email, $request);
-
-        Mail::raw(
-            "Your login code is {$otp}\nThis code expires in 5 minutes.",
-            static function ($message) use ($user): void {
-                $message->to($user->email)->subject('Your DICT login code');
-            }
-        );
-
-        return $otp;
-    }
-
-    public function clearOtp(User $user, bool $includeCode = true): void
-    {
-        $updates = ['otp_hash' => null];
-
-        if ($this->safeHasColumn('users', 'otp_expiration')) {
-            $updates['otp_expiration'] = null;
-        }
-
-        if ($includeCode && $this->safeHasColumn('users', 'otp_code')) {
-            $updates['otp_code'] = null;
-        }
-
-        $user->forceFill($updates)->save();
-    }
-
-    public function otpCooldownRemaining(Request $request): int
-    {
-        $requestedAt = $request->session()->get('otp_requested_at');
-
-        if (!$requestedAt) {
-            return 0;
-        }
-
-        $availableAt = Carbon::parse($requestedAt)->addSeconds(90);
-
-        return now()->lt($availableAt) ? now()->diffInSeconds($availableAt) : 0;
-    }
-
-    public function otpRequestCooldownRemaining(string $email, Request $request): int
-    {
-        $key = $this->otpCooldownKey($email, $request);
-        $rateLimitRemaining = RateLimiter::tooManyAttempts($key, 1)
-            ? RateLimiter::availableIn($key)
-            : 0;
-
-        return max($rateLimitRemaining, $this->otpCooldownRemaining($request));
-    }
-
-    public function markOtpRequestCooldown(string $email, Request $request): void
-    {
-        RateLimiter::hit($this->otpCooldownKey($email, $request), 90);
-    }
-
-    public function otpExpiration(User $user, Request $request): ?Carbon
-    {
-        if ($this->safeHasColumn('users', 'otp_expiration') && $user->otp_expiration) {
-            return $user->otp_expiration;
-        }
-
-        if ($request->session()->has('otp_expires_at')) {
-            return Carbon::parse($request->session()->get('otp_expires_at'));
-        }
-
-        return null;
-    }
-
-    public function verifyOtp(User $user, string $otp): bool
-    {
-        return (bool) $user->otp_hash && Hash::check($otp, $user->otp_hash);
-    }
-
-    public function forgetOtpSession(Request $request): void
-    {
-        $request->session()->forget(['otp_login_email', 'otp_expires_at', 'otp_requested_at']);
-    }
-
-    private function safeHasColumn(string $table, string $column): bool
-    {
-        static $cache = [];
-        $key = $table . ':' . $column;
-
-        if (array_key_exists($key, $cache)) {
-            return $cache[$key];
-        }
-
-        try {
-            return $cache[$key] = Schema::hasColumn($table, $column);
-        } catch (\Throwable) {
-            return $cache[$key] = false;
-        }
-    }
-
-    private function otpCooldownKey(string $email, Request $request): string
-    {
-        return 'otp-cooldown:' . sha1(strtolower(trim($email)) . '|' . (string) $request->ip());
     }
 }

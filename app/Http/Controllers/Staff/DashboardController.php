@@ -51,6 +51,7 @@ class DashboardController extends Controller
             ->where('user_id', $user->id)
             ->where('is_hidden_from_staff_dashboard', false)
             ->whereIn('status', [
+                Report::STATUS_DRAFT,
                 Report::STATUS_PENDING,
                 Report::STATUS_APPROVED,
                 Report::STATUS_FOR_REVISION,
@@ -85,6 +86,7 @@ class DashboardController extends Controller
         $baseCountQuery = Report::query()
             ->where('user_id', $user->id)
             ->whereIn('status', [
+                Report::STATUS_DRAFT,
                 Report::STATUS_PENDING,
                 Report::STATUS_APPROVED,
                 Report::STATUS_FOR_REVISION,

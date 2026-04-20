@@ -29,7 +29,7 @@
             <section class="right-panel" aria-label="Google Authenticator verification form">
                 <div class="form-shell">
                     <h2 class="page-title">Google Authenticator</h2>
-                    <p class="page-copy">Open your authenticator app and enter the current 6-digit code for <strong>{{ $userEmail }}</strong>.</p>
+                    <p class="page-copy">Enter the current 6-digit code from Google Authenticator for your authorized account.</p>
 
                     @if (session('status'))
                         <p class="feedback feedback-success">{{ session('status') }}</p>
@@ -43,29 +43,33 @@
                         <p class="feedback feedback-error">{{ $errors->first('code') }}</p>
                     @endif
 
-                    <form method="POST" action="{{ route('auth.2fa.verify') }}" class="verify-form">
+                    <form method="POST" action="{{ route('auth.2fa.verify') }}" class="verify-form" data-otp-form>
                         @csrf
+                        <input type="hidden" name="code" value="{{ old('code') }}" data-otp-hidden>
 
-                        <label class="input-label" for="code">Authentication Code</label>
-                        <div class="input-wrap">
-                            <input
-                                id="code"
-                                type="text"
-                                name="code"
-                                inputmode="numeric"
-                                pattern="[0-9]*"
-                                maxlength="6"
-                                class="email-input"
-                                placeholder="123456"
-                                value="{{ old('code') }}"
-                                required
-                                autofocus
-                            >
+                        @php
+                            $codeDigits = array_pad(str_split((string) old('code', '')), 6, '');
+                        @endphp
+
+                        <div class="otp-group" role="group" aria-label="Enter 6 digit Google Authenticator code">
+                            @for ($i = 0; $i < 6; $i++)
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    maxlength="1"
+                                    class="otp-input"
+                                    value="{{ $codeDigits[$i] ?? '' }}"
+                                    data-otp-input
+                                    {{ $i === 0 ? 'autofocus' : '' }}
+                                >
+                            @endfor
                         </div>
 
                         <div class="form-meta">
                             <div class="meta-left">
                                 <span class="timer">Refreshes every 30 seconds</span>
+                                <span class="resend-link" aria-hidden="true">{{ $userEmail }}</span>
                             </div>
 
                             <button type="submit" class="verify-button">
@@ -80,5 +84,7 @@
 
         <footer class="footer">&copy; DICT PO1 2026. All Rights Reserved</footer>
     </div>
+
+    <script src="{{ asset('js/verify-otp.js') }}" defer></script>
 </body>
 </html>

@@ -15,6 +15,8 @@ class Topbar extends Component
     public bool $isAdminNavigation;
     public bool $isSuperAdminNavigation;
     public bool $canViewNotifications;
+    public bool $canManageAuthenticatorAccess;
+    public bool $canManageReminders;
     public string $reportsRoute;
     public string $notificationRoute;
     public Collection $submissionNotifications;
@@ -32,8 +34,10 @@ class Topbar extends Component
         $this->isAdminNavigation = $this->user !== null && $authFlowService->isAdminRole($this->user->role);
         $this->isSuperAdminNavigation = $this->user !== null && $authFlowService->isSuperAdminRole($this->user->role);
         $this->canViewNotifications = $this->isAdminNavigation || $this->isSuperAdminNavigation;
+        $this->canManageAuthenticatorAccess = $this->isSuperAdminNavigation;
+        $this->canManageReminders = $this->user?->role === 'ph-admin';
         $this->reportsRoute = $this->isSuperAdminNavigation ? route('reports.index') : route('admin.dashboard.employees');
-        $this->notificationRoute = $this->isSuperAdminNavigation ? route('super-admin.notifications.index') : route('admin.dashboard.pending');
+        $this->notificationRoute = $this->isSuperAdminNavigation ? route('super-admin.notifications.index') : route('dashboard.admin');
         $this->submissionNotifications = collect();
         $this->pendingNotificationsCount = 0;
         $this->superAdminNotifications = collect();
@@ -47,6 +51,8 @@ class Topbar extends Component
             $this->superAdminNotifications = $notificationService->latestPreview(5);
             $this->superAdminUnreadCount = $notificationService->unreadCount();
         } elseif ($this->canViewNotifications) {
+            $baseNotificationRoute = route('dashboard.admin');
+
             $this->submissionNotifications = DB::table('reports')
                 ->leftJoin('users', 'users.id', '=', 'reports.user_id')
                 ->where('reports.status', 'pending')
@@ -62,7 +68,6 @@ class Topbar extends Component
                     });
                 })
                 ->orderByDesc(DB::raw('COALESCE(reports.submitted_at, reports.created_at)'))
-                ->limit(6)
                 ->get([
                     'reports.id',
                     'reports.file_name',
@@ -70,7 +75,12 @@ class Topbar extends Component
                     'reports.created_at',
                     'users.name as user_name',
                     'users.office as user_office',
-                ]);
+                ])
+                ->map(function ($notification) use ($baseNotificationRoute) {
+                    $notification->route = $baseNotificationRoute . '?open_report=' . $notification->id;
+
+                    return $notification;
+                });
 
             $this->pendingNotificationsCount = DB::table('reports')
                 ->leftJoin('users', 'users.id', '=', 'reports.user_id')

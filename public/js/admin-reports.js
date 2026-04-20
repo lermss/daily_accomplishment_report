@@ -114,6 +114,7 @@
     const reviewFeedback = modal.querySelector('[data-review-feedback]');
     let activeCardFilter = mode === 'approved' ? 'approved' : mode === 'pending' ? 'pending' : mode === 'revisions' ? 'for_revision' : 'all';
     let currentReport = null;
+    const autoOpenReportId = (dashboard.dataset.autoOpenReportId || '').trim();
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, function (character) {
@@ -367,4 +368,18 @@
     if (returnButton) returnButton.addEventListener('click', function () { submitReview('for_revision'); });
 
     applyFilters();
+
+    if (autoOpenReportId !== '') {
+        const matchingTrigger = dashboard.querySelector('[data-report-row][data-report-id="' + autoOpenReportId + '"] [data-open-report-modal]');
+
+        if (matchingTrigger) {
+            activeCardFilter = 'all';
+            if (statusSelect) {
+                statusSelect.value = '';
+            }
+            applyFilters();
+            populateModal(JSON.parse(matchingTrigger.dataset.report || '{}'));
+            openModal();
+        }
+    }
 })();

@@ -170,7 +170,10 @@ class AdminDashboardController extends Controller
         }
 
         // Admin report screens now live under the dedicated admin view namespace.
-        return view('admin.reports', $this->adminPortalService->buildAdminDashboardData($request, $user, $mode));
+        return view('admin.reports', array_merge(
+            $this->adminPortalService->buildAdminDashboardData($request, $user, $mode),
+            ['autoOpenReportId' => (string) $request->query('open_report', '')]
+        ));
     }
 
     private function renderSuperAdminReports(Request $request, string $mode): View|RedirectResponse
@@ -234,6 +237,5 @@ class AdminDashboardController extends Controller
         }
     }
 }
-
 
 

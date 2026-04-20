@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('TempPass123!'),
                 'role' => 'hr-super-admin',
                 'status' => 'active',
+                'is_authorized' => true,
             ],
             [
                 'name' => 'Admin',
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
                 'status' => 'active',
+                'is_authorized' => true,
             ],
         ];
 

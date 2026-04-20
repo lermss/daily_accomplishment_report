@@ -16,6 +16,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/tests/.compiled-views
 Homestead.json
 Homestead.yaml
 Thumbs.db

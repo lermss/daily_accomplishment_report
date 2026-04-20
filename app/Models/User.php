@@ -37,12 +37,18 @@ class User extends Authenticatable
         'position',
         'role',
         'status',
+        'is_authorized',
         'otp_code',
         'otp_hash',
         'otp_expiration',
         'google2fa_secret',
         'google2fa_enabled',
         'two_factor_confirmed_at',
+        'google2fa_authorization_code_hash',
+        'google2fa_authorization_code_expires_at',
+        'google2fa_authorization_sent_at',
+        'google2fa_authorized_by',
+        'google2fa_authorized_at',
         'notifications_read_at',
     ];
 
@@ -69,8 +75,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'otp_expiration' => 'datetime',
+            'is_authorized' => 'boolean',
             'google2fa_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
+            'google2fa_authorization_code_expires_at' => 'datetime',
+            'google2fa_authorization_sent_at' => 'datetime',
+            'google2fa_authorized_at' => 'datetime',
             'notifications_read_at' => 'datetime',
             'password' => 'hashed',
         ];
