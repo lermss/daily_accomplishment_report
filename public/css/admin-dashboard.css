@@ -530,10 +530,6 @@ tbody td {
 }
 
 @media (max-width: 640px) {
-    body {
-        padding: 12px;
-    }
-
     .admin-content {
         padding: 20px 16px 24px;
     }

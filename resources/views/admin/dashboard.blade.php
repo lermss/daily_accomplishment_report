@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/shared-dashboard-theme.css') }}?v={{ filemtime(public_path('css/shared-dashboard-theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/shared-navbar.css') }}?v={{ filemtime(public_path('css/shared-navbar.css')) }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 @endpush
 
 @section('content')
@@ -34,6 +35,105 @@
 
                 @if ($mode === 'dashboard')
                     @include('admin.partials.dashboard-summary-cards')
+
+                    {{-- ═══════════════════════════════════════════════════
+                         Universal Chart Filter Bar
+                    ═══════════════════════════════════════════════════ --}}
+                    <section class="chart-filter-bar" aria-label="Chart date filter">
+                        <form method="GET" action="{{ url()->current() }}" class="chart-filter-form" id="chartFilterForm">
+                            {{-- Preserve any existing user-table filters --}}
+                            @if ($search !== '')
+                                <input type="hidden" name="search" value="{{ $search }}">
+                            @endif
+                            @if ($filter !== '')
+                                <input type="hidden" name="filter" value="{{ $filter }}">
+                            @endif
+
+                            <div class="chart-filter-inner">
+                                <span class="chart-filter-label">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M3 4h1v16H3V4Zm17 0h1v16h-1V4ZM9 4h6v2H9V4Zm0 7h6v2H9v-2Zm0 7h6v2H9v-2Z"/></svg>
+                                    Filter Charts
+                                </span>
+
+                                <div class="chart-quick-btns">
+                                    <button type="submit" name="chart_quick" value=""
+                                        class="chart-quick-btn {{ $chartQuick === '' && $chartFromInput === '' && $chartToInput === '' ? 'active' : '' }}">All Time</button>
+                                    @foreach ($chartQuickOptions as $qVal => $qLabel)
+                                        <button type="submit" name="chart_quick" value="{{ $qVal }}"
+                                            class="chart-quick-btn {{ $chartQuick === $qVal ? 'active' : '' }}">{{ $qLabel }}</button>
+                                    @endforeach
+                                </div>
+
+                                <div class="chart-date-range">
+                                    <label class="chart-date-label">From
+                                        <input type="date" name="chart_from" value="{{ $chartFromInput }}" class="chart-date-input" max="{{ date('Y-m-d') }}">
+                                    </label>
+                                    <span class="chart-date-sep">—</span>
+                                    <label class="chart-date-label">To
+                                        <input type="date" name="chart_to" value="{{ $chartToInput }}" class="chart-date-input" max="{{ date('Y-m-d') }}">
+                                    </label>
+                                    <button type="submit" class="chart-date-apply">Apply</button>
+                                </div>
+                            </div>
+                        </form>
+                    </section>
+
+                    {{-- ═══════════════════════════════════════════════════
+                         Charts Section
+                    ═══════════════════════════════════════════════════ --}}
+                    <section class="charts-section" aria-label="Analytics charts">
+
+                        {{-- Users by Role — Doughnut --}}
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <div class="chart-card-title">
+                                    <span class="chart-card-icon chart-card-icon--purple">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3Zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5Z"/></svg>
+                                    </span>
+                                    <h2>Users by Role</h2>
+                                </div>
+                                <span class="chart-card-badge">{{ array_sum($chartData['usersByRole']) }} total</span>
+                            </div>
+                            <div class="chart-card-body chart-card-body--doughnut">
+                                <div class="doughnut-wrap">
+                                    <canvas id="usersChart" aria-label="Users by role doughnut chart" role="img"></canvas>
+                                    <div class="doughnut-center" id="doughnutCenter">
+                                        <strong>{{ array_sum($chartData['usersByRole']) }}</strong>
+                                        <span>users</span>
+                                    </div>
+                                </div>
+                                <ul class="chart-legend" id="usersLegend" aria-label="Users chart legend"></ul>
+                            </div>
+                        </div>
+
+                        {{-- Reports by Status — Stacked Bar --}}
+                        <div class="chart-card">
+                            <div class="chart-card-header">
+                                <div class="chart-card-title">
+                                    <span class="chart-card-icon chart-card-icon--blue">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M5 9.2h3V19H5V9.2ZM10.6 5h2.8v14h-2.8V5ZM16.2 13H19v6h-2.8v-6Z"/></svg>
+                                    </span>
+                                    <h2>Reports Overview</h2>
+                                </div>
+                                <span class="chart-card-badge">Last {{ count($chartData['reportMonths']) }} months</span>
+                            </div>
+                            <div class="chart-card-body">
+                                <canvas id="reportsChart" aria-label="Reports by status stacked bar chart" role="img"></canvas>
+                            </div>
+                            <div class="chart-legend-row" id="reportsLegend" aria-label="Reports chart legend"></div>
+                        </div>
+
+                    </section>
+
+                    {{-- Embed chart data for JS --}}
+                    <script id="chart-data" type="application/json">
+                        {!! json_encode([
+                            'usersByRole'     => $chartData['usersByRole'],
+                            'reportMonths'    => $chartData['reportMonths'],
+                            'reportsByStatus' => $chartData['reportsByStatus'],
+                        ], JSON_UNESCAPED_UNICODE) !!}
+                    </script>
+
                 @else
                     <div class="section-header">
                        
@@ -52,7 +152,7 @@
                     </div>
                 @endif
 
-                <section class="table-panel">
+                <section class="table-panel" style="margin-top: 15px">
                     <div class="table-toolbar">
                         <div class="toolbar-main-actions">
                             <form method="GET" action="{{ url()->current() }}" class="search-filter-bar" data-search-filter-form>
@@ -283,4 +383,177 @@
     </script>
     <script src="{{ asset('js/dashboard.js') }}" defer></script>
     <script src="{{ asset('js/search-filter.js') }}" defer></script>
+
+    @if ($mode === 'dashboard')
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Palette matching the existing DAR design tokens ──────────────
+        const PALETTE = {
+            purple : { bg: 'rgba(108, 65, 222, 0.85)', border: 'rgba(108, 65, 222, 1)', light: 'rgba(108, 65, 222, 0.12)' },
+            yellow : { bg: 'rgba(245, 158, 11, 0.85)',  border: 'rgba(245, 158, 11, 1)',  light: 'rgba(245, 158, 11, 0.12)'  },
+            green  : { bg: 'rgba(16, 185, 129, 0.85)',  border: 'rgba(16, 185, 129, 1)',  light: 'rgba(16, 185, 129, 0.12)'  },
+            blue   : { bg: 'rgba(59, 130, 246, 0.85)',  border: 'rgba(59, 130, 246, 1)',  light: 'rgba(59, 130, 246, 0.12)'  },
+            red    : { bg: 'rgba(239, 68, 68, 0.85)',   border: 'rgba(239, 68, 68, 1)',   light: 'rgba(239, 68, 68, 0.12)'   },
+            navy   : { bg: 'rgba(31, 78, 121, 0.85)',   border: 'rgba(31, 78, 121, 1)',   light: 'rgba(31, 78, 121, 0.12)'   },
+        };
+
+        const raw = JSON.parse(document.getElementById('chart-data').textContent);
+        if (!raw) return;
+
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.font.size   = 12;
+
+        // ─────────────────────────────────────────────
+        // 1.  USERS DOUGHNUT CHART
+        // ─────────────────────────────────────────────
+        const roleColors = [PALETTE.purple, PALETTE.yellow, PALETTE.navy, PALETTE.blue];
+        const roleLabels = Object.keys(raw.usersByRole);
+        const roleData   = Object.values(raw.usersByRole);
+        const total      = roleData.reduce((a, b) => a + b, 0);
+
+        const usersCtx = document.getElementById('usersChart');
+        if (usersCtx) {
+            const usersChart = new Chart(usersCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: roleLabels,
+                    datasets: [{
+                        data: roleData,
+                        backgroundColor: roleColors.map(c => c.bg),
+                        borderColor    : roleColors.map(c => c.border),
+                        borderWidth    : 2,
+                        hoverOffset    : 8,
+                    }]
+                },
+                options: {
+                    cutout     : '72%',
+                    responsive : true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: { animateScale: true, duration: 700, easing: 'easeOutQuart' },
+                }
+            });
+
+            // Build custom legend
+            const legend = document.getElementById('usersLegend');
+            if (legend) {
+                roleLabels.forEach((label, i) => {
+                    const pct = total > 0 ? Math.round(roleData[i] / total * 100) : 0;
+                    const li = document.createElement('li');
+                    li.className = 'chart-legend-item';
+                    li.innerHTML = `
+                        <span class="chart-legend-dot" style="background:${roleColors[i].border}"></span>
+                        <span class="chart-legend-text">${label}</span>
+                        <span class="chart-legend-val">${roleData[i]}</span>
+                        <span class="chart-legend-pct">${pct}%</span>
+                    `;
+                    legend.appendChild(li);
+                });
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // 2.  REPORTS STACKED BAR CHART
+        // ─────────────────────────────────────────────
+        const statusMeta = {
+            pending     : { label: 'Pending',      color: PALETTE.yellow },
+            approved    : { label: 'Approved',     color: PALETTE.green  },
+            for_revision: { label: 'For Revision', color: PALETTE.red    },
+        };
+
+        const reportDatasets = Object.entries(raw.reportsByStatus).map(([status, values]) => ({
+            label          : statusMeta[status]?.label ?? status,
+            data           : values,
+            backgroundColor: statusMeta[status]?.color.bg     ?? 'rgba(180,180,180,0.7)',
+            borderColor    : statusMeta[status]?.color.border  ?? 'rgba(180,180,180,1)',
+            borderWidth    : 1.5,
+            borderRadius   : 4,
+            borderSkipped  : false,
+        }));
+
+        const reportsCtx = document.getElementById('reportsChart');
+        if (reportsCtx) {
+            new Chart(reportsCtx, {
+                type: 'bar',
+                data: {
+                    labels  : raw.reportMonths,
+                    datasets: reportDatasets,
+                },
+                options: {
+                    responsive           : true,
+                    maintainAspectRatio  : false,
+                    interaction          : { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            stacked   : true,
+                            grid      : { display: false },
+                            ticks     : { color: '#64748b' },
+                        },
+                        y: {
+                            stacked   : true,
+                            beginAtZero: true,
+                            grid      : { color: 'rgba(100,116,139,0.1)' },
+                            ticks     : {
+                                color    : '#64748b',
+                                stepSize : 1,
+                                precision: 0,
+                            },
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: items => items[0]?.label ?? '',
+                                label: ctx  => ` ${ctx.dataset.label}: ${ctx.parsed.y}`,
+                            }
+                        }
+                    },
+                    animation: { duration: 700, easing: 'easeOutQuart' },
+                }
+            });
+
+            // Build custom legend row
+            const reportsLegend = document.getElementById('reportsLegend');
+            if (reportsLegend) {
+                Object.entries(statusMeta).forEach(([, meta]) => {
+                    const item = document.createElement('span');
+                    item.className = 'chart-legend-item chart-legend-item--inline';
+                    item.innerHTML = `<span class="chart-legend-dot" style="background:${meta.color.border}"></span>${meta.label}`;
+                    reportsLegend.appendChild(item);
+                });
+            }
+        }
+
+        // ── Auto-submit date range when both dates are filled ────────────
+        const form = document.getElementById('chartFilterForm');
+        if (form) {
+            const fromInput = form.querySelector('[name="chart_from"]');
+            const toInput   = form.querySelector('[name="chart_to"]');
+            [fromInput, toInput].forEach(el => {
+                if (!el) return;
+                el.addEventListener('change', () => {
+                    if (fromInput.value && toInput.value) {
+                        // Clear quick filter when a custom range is set
+                        const qBtn = form.querySelector('.chart-quick-btn.active');
+                        if (qBtn && qBtn.value !== '') qBtn.classList.remove('active');
+                    }
+                });
+            });
+        }
+    }());
+    </script>
+    @endif
 @endpush

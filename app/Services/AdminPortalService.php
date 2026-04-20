@@ -69,7 +69,6 @@ class AdminPortalService
             'ph-admin' => 'PH Admin',
             'hr-super-admin' => 'HR Super Admin',
             'interns' => 'Interns',
-        
         ];
         $roleFilter = trim((string) $request->query('filter', ''));
 
@@ -77,80 +76,88 @@ class AdminPortalService
             $roleFilter = '';
         }
 
+        // Universal chart date filter parameters
+        $chartQuick       = trim((string) $request->query('chart_quick', ''));
+        $chartFromInput   = trim((string) $request->query('chart_from', ''));
+        $chartToInput     = trim((string) $request->query('chart_to', ''));
+        $availableChartQuickFilters = [
+            'today' => 'Today',
+            'week'  => 'This Week',
+            'month' => 'This Month',
+        ];
+        if (!array_key_exists($chartQuick, $availableChartQuickFilters)) {
+            $chartQuick = '';
+        }
+        [$chartFrom, $chartTo] = $this->resolveChartDateRange($chartQuick, $chartFromInput, $chartToInput);
+
         $users = $this->managedUsersQuery($search, $scope, $roleFilter)
             ->orderBy('name')
             ->get([
-                'id',
-                'name',
-                'first_name',
-                'middle_name',
-                'last_name',
-                'email',
-                'avatar_path',
-                'position',
-                'project',
-                'bureau',
-                'division',
-                'office',
-                'institution',
-                'role',
-                'status',
+                'id', 'name', 'first_name', 'middle_name', 'last_name',
+                'email', 'avatar_path', 'position', 'project', 'bureau',
+                'division', 'office', 'institution', 'role', 'status',
             ]);
 
         $allUsersCount = $this->managedUsersQuery()->count();
-        $archiveCount = $this->managedUsersQuery('', 'archive')->count();
-        $activeCount = $this->managedUsersQuery('', 'active')->count();
+        $archiveCount  = $this->managedUsersQuery('', 'archive')->count();
+        $activeCount   = $this->managedUsersQuery('', 'active')->count();
 
         return [
             'title' => match ($mode) {
-                'users' => 'Users',
+                'users'   => 'Users',
                 'archive' => 'Archive Users',
-                'active' => 'Active Users',
+                'active'  => 'Active Users',
                 'reports' => 'Reports',
-                default => 'Dashboard',
+                default   => 'Dashboard',
             },
-            'mode' => $mode,
-            'user' => $user,
-            'search' => $search,
-            'filter' => $roleFilter,
-            'filterLabel' => 'Role',
+            'mode'          => $mode,
+            'user'          => $user,
+            'search'        => $search,
+            'filter'        => $roleFilter,
+            'filterLabel'   => 'Role',
             'filterOptions' => $availableRoleFilters,
-            'users' => $users,
-            'counts' => [
-                'users' => $allUsersCount,
+            'users'         => $users,
+            'counts'        => [
+                'users'   => $allUsersCount,
                 'archive' => $archiveCount,
-                'active' => $activeCount,
+                'active'  => $activeCount,
             ],
             'stats' => [
                 [
-                    'key' => 'users',
+                    'key'   => 'users',
                     'label' => 'Users',
                     'count' => $allUsersCount,
-                    'meta' => 'Registered accounts',
-                    'tone' => 'purple',
+                    'meta'  => 'Registered accounts',
+                    'tone'  => 'purple',
                     'route' => route('dashboard.users'),
                 ],
                 [
-                    'key' => 'archive',
+                    'key'   => 'archive',
                     'label' => 'Archive',
                     'count' => $archiveCount,
-                    'meta' => 'Archived accounts',
-                    'tone' => 'yellow',
+                    'meta'  => 'Archived accounts',
+                    'tone'  => 'yellow',
                     'route' => route('dashboard.archive'),
                 ],
                 [
-                    'key' => 'active',
+                    'key'   => 'active',
                     'label' => 'Active',
                     'count' => $activeCount,
-                    'meta' => 'Accessible accounts',
-                    'tone' => 'green',
+                    'meta'  => 'Accessible accounts',
+                    'tone'  => 'green',
                     'route' => route('dashboard.active'),
                 ],
             ],
             'canManageUsers' => $this->authFlowService->canManageUsers($user->role),
             'canAccessAudit' => $this->authFlowService->canAccessAudit($user->role),
             'userFormOptions' => $this->userFormOptions(),
-            'initialRole' => old('role', 'hr-super-admin'),
+            'initialRole'    => old('role', 'hr-super-admin'),
+            // Chart data
+            'chartData'             => $this->buildChartData($chartFrom, $chartTo),
+            'chartQuick'            => $chartQuick,
+            'chartFromInput'        => $chartFromInput,
+            'chartToInput'          => $chartToInput,
+            'chartQuickOptions'     => $availableChartQuickFilters,
         ];
     }
 
@@ -680,6 +687,120 @@ class AdminPortalService
             DB::table('activity_logs')->insert($payload);
         } catch (\Throwable) {
         }
+    }
+
+    // =========================================================
+    // Chart Data Helpers
+    // =========================================================
+
+    /**
+     * Build the data arrays consumed by Chart.js in the dashboard view.
+     * Users chart: counts per role group (all active).
+     * Reports chart: counts per status per month for the last 6 months.
+     *
+     * @param  Carbon|null  $from
+     * @param  Carbon|null  $to
+     */
+    private function buildChartData(?Carbon $from, ?Carbon $to): array
+    {
+        // ── Users by role (ignores date filter – always shows current state) ──
+        $roleGroups = [
+            'Staff'          => 'staff',
+            'PH Admin'       => 'ph-admin',
+            'HR Super Admin' => 'hr-super-admin',
+            'Interns'        => 'interns',
+        ];
+
+        $usersByRole = [];
+        foreach ($roleGroups as $label => $roleValue) {
+            $usersByRole[$label] = (int) User::query()
+                ->where('role', $roleValue)
+                ->whereIn('role', $this->authFlowService->managedRoles())
+                ->count();
+        }
+
+        // ── Reports by status per month (last 6 months, respects date filter) ──
+        $months     = [];
+        $monthKeys  = [];
+        $statuses   = ['pending', 'approved', 'for_revision'];
+        // Use submitted_at when available, fall back to created_at
+        $dateExpr   = 'COALESCE(submitted_at, created_at)';
+
+        // Build 6-month window (or from date-filter window)
+        if ($from && $to) {
+            $periodStart = $from->copy()->startOfMonth();
+            $periodEnd   = $to->copy()->endOfMonth();
+        } else {
+            $periodStart = now()->subMonths(5)->startOfMonth();
+            $periodEnd   = now()->endOfMonth();
+        }
+
+        $cursor = $periodStart->copy();
+        while ($cursor->lte($periodEnd)) {
+            $key          = $cursor->format('Y-m');
+            $monthKeys[]  = $key;
+            $months[]     = $cursor->format('M Y');
+            $cursor->addMonth();
+        }
+
+        // Query grouped counts
+        $rows = DB::table('reports')
+            ->selectRaw("DATE_FORMAT({$dateExpr}, '%Y-%m') as month_key, status, COUNT(*) as total")
+            ->whereIn('status', $statuses)
+            ->where('is_hidden_from_admin_dashboard', false)
+            ->when($from, fn ($q) => $q->whereRaw("{$dateExpr} >= ?", [$from]))
+            ->when($to,   fn ($q) => $q->whereRaw("{$dateExpr} <= ?", [$to]))
+            ->groupByRaw("DATE_FORMAT({$dateExpr}, '%Y-%m'), status")
+            ->get();
+
+        // Map into [status => [month_key => count]]
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row->status][$row->month_key] = (int) $row->total;
+        }
+
+        $reportsByStatus = [];
+        foreach ($statuses as $s) {
+            $reportsByStatus[$s] = array_map(
+                fn ($mk) => $grouped[$s][$mk] ?? 0,
+                $monthKeys
+            );
+        }
+
+        return [
+            'usersByRole'     => $usersByRole,
+            'reportMonths'    => $months,
+            'reportsByStatus' => $reportsByStatus,
+        ];
+    }
+
+    /**
+     * Resolve the chart date range from quick-filter or explicit inputs.
+     *
+     * @return array{Carbon|null, Carbon|null}
+     */
+    private function resolveChartDateRange(string $quick, string $fromInput, string $toInput): array
+    {
+        if ($quick !== '') {
+            return match ($quick) {
+                'today' => [now()->startOfDay(), now()->endOfDay()],
+                'week'  => [now()->startOfWeek(), now()->endOfWeek()],
+                'month' => [now()->startOfMonth(), now()->endOfMonth()],
+                default => [null, null],
+            };
+        }
+
+        $from = null;
+        $to   = null;
+
+        if ($fromInput !== '') {
+            try { $from = Carbon::createFromFormat('Y-m-d', $fromInput)->startOfDay(); } catch (\Throwable) {}
+        }
+        if ($toInput !== '') {
+            try { $to = Carbon::createFromFormat('Y-m-d', $toInput)->endOfDay(); } catch (\Throwable) {}
+        }
+
+        return [$from, $to];
     }
 
     private function managedUsersQuery(string $search = '', ?string $scope = null, string $roleFilter = '')

@@ -55,7 +55,7 @@
     }
 @endphp
 
-<header class="navbar ">
+<header class="navbar">
     <div class="nav-left">
         <div class="logos">
             <img src="{{ asset('images/dict_logo.png') }}" alt="DICT Logo">
