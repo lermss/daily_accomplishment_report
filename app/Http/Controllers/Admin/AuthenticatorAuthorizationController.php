@@ -32,13 +32,15 @@ class AuthenticatorAuthorizationController extends Controller
 
         $search = trim((string) $request->query('search', ''));
         $users = User::query()
-            ->whereIn('role', ['admin', 'ph-admin', 'staff', 'interns'])
             ->when($search !== '', function ($query) use ($search) {
                 $like = '%' . $search . '%';
 
-                $query->where(function ($subQuery) use ($like) {
+                $query->where(function ($subQuery) use ($like, $search) {
                     $subQuery
                         ->where('name', 'like', $like)
+                        ->orWhere('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) LIKE ?", [$like])
                         ->orWhere('email', 'like', $like)
                         ->orWhere('role', 'like', $like)
                         ->orWhere('office', 'like', $like);
