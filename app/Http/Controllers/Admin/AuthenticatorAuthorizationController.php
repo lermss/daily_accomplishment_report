@@ -86,14 +86,16 @@ class AuthenticatorAuthorizationController extends Controller
             return back()->with('authenticator_error', 'Use the seed or admin workflow for super admin access management.');
         }
 
-        $manualSetupKey = $this->existingSecret($targetUser) ?? app(Google2FA::class)->generateSecretKey();
+        $existingSecret = $this->existingSecret($targetUser);
+        $manualSetupKey = $existingSecret ?? app(Google2FA::class)->generateSecretKey();
         $qrImage = $this->buildQrImage($targetUser->email, $manualSetupKey);
+        $isExistingProvisioning = $existingSecret !== null && (bool) $targetUser->google2fa_enabled;
 
         $targetUser->forceFill([
             'is_authorized' => true,
             'google2fa_secret' => Crypt::encryptString($manualSetupKey),
             'google2fa_enabled' => true,
-            'two_factor_confirmed_at' => null,
+            'two_factor_confirmed_at' => $isExistingProvisioning ? $targetUser->two_factor_confirmed_at : null,
             'google2fa_authorization_code_hash' => null,
             'google2fa_authorization_code_expires_at' => null,
             'google2fa_authorization_sent_at' => now(),

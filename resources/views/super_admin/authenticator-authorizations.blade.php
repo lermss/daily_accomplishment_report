@@ -108,7 +108,7 @@
                                                 {{ $listedUser->google2fa_authorization_sent_at ? 'Sent ' . $listedUser->google2fa_authorization_sent_at->diffForHumans() : 'No access email sent yet' }}
                                             </div>
                                             <div class="auth-meta">
-                                                {{ $listedUser->two_factor_confirmed_at ? 'Authenticator already linked' : 'Resend to rotate the QR and manual key' }}
+                                                {{ $listedUser->two_factor_confirmed_at ? 'Authenticator already linked' : 'Resend the current QR and manual key' }}
                                             </div>
                                         </td>
                                         <td>

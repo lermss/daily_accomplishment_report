@@ -160,6 +160,46 @@ class AuthenticatorFlowTest extends TestCase
         });
     }
 
+    public function test_resending_access_email_preserves_confirmed_state_and_existing_secret(): void
+    {
+        Mail::fake();
+
+        $actor = $this->makeUser([
+            'email' => 'super-admin-resend@example.com',
+            'role' => 'hr-super-admin',
+            'is_authorized' => true,
+        ]);
+
+        $existingSecret = app(Google2FA::class)->generateSecretKey();
+        $confirmedAt = now()->subDay();
+        $targetUser = $this->makeUser([
+            'email' => 'existing-staff@example.com',
+            'role' => 'staff',
+            'is_authorized' => true,
+            'google2fa_enabled' => true,
+            'google2fa_secret' => Crypt::encryptString($existingSecret),
+            'two_factor_confirmed_at' => $confirmedAt,
+        ]);
+
+        $response = $this->withSession([
+            'authenticated_user_id' => $actor->id,
+        ])->post(route('super-admin.authenticator.authorize', $targetUser));
+
+        $response->assertRedirect();
+
+        $targetUser->refresh();
+
+        $this->assertTrue((bool) $targetUser->google2fa_enabled);
+        $this->assertNotNull($targetUser->two_factor_confirmed_at);
+        $this->assertSame($confirmedAt->toDateTimeString(), $targetUser->two_factor_confirmed_at->toDateTimeString());
+        $this->assertSame($existingSecret, Crypt::decryptString($targetUser->google2fa_secret));
+
+        Mail::assertSent(GoogleAuthenticatorProvisioningMail::class, function (GoogleAuthenticatorProvisioningMail $mail) use ($targetUser, $existingSecret) {
+            return $mail->hasTo($targetUser->email)
+                && $mail->manualSetupKey === $existingSecret;
+        });
+    }
+
     public function test_successful_google_authenticator_login_marks_first_confirmation(): void
     {
         $secret = app(Google2FA::class)->generateSecretKey();
