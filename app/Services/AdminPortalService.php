@@ -25,18 +25,21 @@ class AdminPortalService
             'hr-super-admin' => [
                 'label' => 'Human Resource- Super Admin',
                 'fields' => ['name', 'email', 'position', 'project', 'bureau'],
+                'positionOptions' => ['HR Officer', 'Administrative Officer', 'Supervising Administrative Officer', 'Human Resource - Super Admin'],
                 'projectOptions' => ['Di DigiGov', 'ILCDB', 'Cybersecurity', 'PNPKI', 'FW4A', 'IDB', 'MISS', 'NBP', 'GECS', 'DTC', 'SPARK', 'AFD'],
                 'bureauOptions' => ['Regional Office', 'Provincial Office', 'Field Office', 'TCO', 'AFD'],
             ],
             'ph-admin' => [
                 'label' => 'Provincial Head - Admin',
                 'fields' => ['name', 'email', 'position', 'division', 'office'],
+                'positionOptions' => ['Provincial Head - Admin', 'Provincial Officer', 'Officer-in-Charge'],
                 'divisionOptions' => ['DigiGov', 'ILCDB', 'NPPB', 'Cybersecurity', 'PNPKI', 'ILCDB', 'MISS', 'NBP', 'GECS', 'OTC', 'SPARK', 'AFD'],
                 'officeOptions' => $this->provincialHeadAssignmentService->officeOptions(),
             ],
             'staff' => [
                 'label' => 'Staff',
                 'fields' => ['name', 'email', 'position', 'project', 'bureau', 'office'],
+                'positionOptions' => ['Staff', 'Administrative Aide', 'Administrative Assistant', 'Project Technical Assistant', 'Project Development Officer'],
                 'projectOptions' => ['DigiGov', 'ILCDB', 'Cybersecurity', 'PNPKI', 'FW4A', 'ILD', 'MISS', 'NBP', 'GECS', 'OTC', 'SPARK', 'AFD'],
                 'bureauOptions' => ['Regional Office', 'Provincial Office', 'Field Office', 'TCO', 'AFD'],
                 'officeOptions' => $this->provincialHeadAssignmentService->officeOptions(),
@@ -45,6 +48,7 @@ class AdminPortalService
                 'interns' => [
                     'label' => 'Intern',
                     'fields' => ['name', 'email', 'position', 'project', 'bureau', 'office'],
+                    'positionOptions' => ['Intern', 'Student Intern', 'On-the-Job Trainee'],
                     'projectOptions' => ['DigiGov', 'ILCDB', 'Cybersecurity', 'PNPKI', 'FW4A', 'ILD', 'MISS', 'NBP', 'GECS', 'OTC', 'SPARK', 'AFD'],
                     'bureauOptions' => ['Regional Office', 'Provincial Office', 'Field Office', 'TCO', 'AFD'],
                     'officeOptions' => $this->provincialHeadAssignmentService->officeOptions(),
@@ -474,6 +478,14 @@ class AdminPortalService
             ->pluck('position')
             ->all();
 
+        $defaultPositionOptions = collect($this->userFormOptions())
+            ->pluck('positionOptions')
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $projectOptions = collect($this->userFormOptions())
             ->pluck('projectOptions')
             ->flatten()
@@ -512,7 +524,7 @@ class AdminPortalService
             'project' => old('project', $user->project),
             'bureau' => old('bureau', $user->bureau),
             'office' => old('office', $user->office),
-            'positionOptions' => array_values(array_unique(array_filter(array_merge($positionOptions, [$user->position])))),
+            'positionOptions' => array_values(array_unique(array_filter(array_merge($defaultPositionOptions, $positionOptions, [$user->position])))),
             'projectOptions' => array_values(array_unique(array_filter(array_merge($projectOptions, [$user->project])))),
             'bureauOptions' => array_values(array_unique(array_filter(array_merge($bureauOptions, [$user->bureau])))),
             'officeOptions' => array_values(array_unique(array_filter(array_merge($officeOptions, [$user->office])))),
@@ -607,11 +619,14 @@ class AdminPortalService
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'] ?: null,
             'last_name' => $validated['last_name'],
-            'position' => $validated['position'] ?: null,
-            'project' => $validated['project'] ?: null,
-            'bureau' => $validated['bureau'] ?: null,
-            'office' => $validated['office'] ?: null,
+            'office' => $validated['office'] ?? $user->office,
         ];
+
+        foreach (['position', 'project', 'bureau'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $updates[$field] = $validated[$field] ?: null;
+            }
+        }
 
         if ($request->hasFile('profile_image')) {
             if ($user->avatar_path) {

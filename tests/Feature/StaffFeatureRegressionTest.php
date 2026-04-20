@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Staff\DashboardController;
 use App\Models\Report;
 use App\Models\ReportEntry;
 use App\Models\User;
+use App\Services\AdminPortalService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -18,10 +21,7 @@ class StaffFeatureRegressionTest extends TestCase
     {
         parent::setUp();
 
-        $this->compiledPath = base_path('tests/.compiled-views/' . str_replace('\\', '-', static::class) . '-' . $this->name());
-        File::ensureDirectoryExists($this->compiledPath);
-
-        config()->set('view.compiled', $this->compiledPath);
+        $this->setCompiledViewPath('initial');
 
         Schema::dropAllTables();
 
@@ -125,6 +125,39 @@ class StaffFeatureRegressionTest extends TestCase
         $this->assertSame('Ready for review', $entry->remarks);
     }
 
+    public function test_created_draft_report_appears_on_staff_dashboard(): void
+    {
+        $user = $this->makeUser([
+            'email' => 'dashboard@example.com',
+            'role' => 'staff',
+            'office' => 'La Union',
+        ]);
+
+        $this->withSession([
+            'authenticated_user_id' => $user->id,
+        ])->post(route('staff.reports.store'), [
+            'file_name' => 'Dashboard Visible Report',
+            'start_date' => ['2026-04-20'],
+            'end_date' => ['2026-04-20'],
+            'activity' => ['Prepared dashboard update'],
+            'details' => ['Verified report visibility'],
+            'remarks' => ['Draft should be visible'],
+        ]);
+
+        $request = Request::create(route('staff.dashboard'), 'GET');
+        $request->setLaravelSession(app('session')->driver());
+        $request->session()->put('authenticated_user_id', $user->id);
+
+        $response = app(DashboardController::class)->staff($request);
+
+        $this->assertInstanceOf(\Illuminate\View\View::class, $response);
+
+        $reports = $response->getData()['reports'];
+        $this->assertCount(1, $reports);
+        $this->assertSame('Dashboard Visible Report', $reports->first()->file_name);
+        $this->assertSame(Report::STATUS_DRAFT, $reports->first()->status);
+    }
+
     public function test_staff_can_update_existing_report_entry(): void
     {
         $user = $this->makeUser([
@@ -208,6 +241,54 @@ class StaffFeatureRegressionTest extends TestCase
         $this->assertSame('La Union', $user->office);
     }
 
+    public function test_staff_profile_update_allows_missing_optional_position_field(): void
+    {
+        $user = $this->makeUser([
+            'email' => 'optional-position@example.com',
+            'role' => 'staff',
+            'office' => 'La Union',
+            'position' => 'Existing Position',
+            'project' => 'Old Project',
+            'bureau' => 'Old Bureau',
+        ]);
+
+        $response = $this->withSession([
+            'authenticated_user_id' => $user->id,
+        ])->put(route('staff.profile.update'), [
+            'first_name' => 'Grant',
+            'middle_name' => null,
+            'last_name' => 'Tester',
+            'project' => 'DigiGov',
+            'bureau' => 'Regional Office',
+            'office' => 'Ilocos Norte',
+        ]);
+
+        $response->assertRedirect(route('staff.profile'));
+        $response->assertSessionHas('profile_status', 'Profile updated successfully.');
+
+        $user->refresh();
+
+        $this->assertSame('Existing Position', $user->position);
+        $this->assertSame('DigiGov', $user->project);
+        $this->assertSame('Regional Office', $user->bureau);
+        $this->assertSame('Ilocos Norte', $user->office);
+    }
+
+    public function test_profile_data_includes_fallback_position_options_when_database_has_none(): void
+    {
+        $user = $this->makeUser([
+            'email' => 'no-position-options@example.com',
+            'role' => 'staff',
+            'position' => null,
+        ]);
+
+        $profileData = app(AdminPortalService::class)->buildProfileData($user);
+
+        $this->assertNotEmpty($profileData['positionOptions']);
+        $this->assertContains('Staff', $profileData['positionOptions']);
+        $this->assertContains('Administrative Assistant', $profileData['positionOptions']);
+    }
+
     private function makeUser(array $overrides = []): User
     {
         return User::query()->create(array_merge([
@@ -232,5 +313,14 @@ class StaffFeatureRegressionTest extends TestCase
             'two_factor_confirmed_at' => null,
             'notifications_read_at' => null,
         ], $overrides));
+    }
+
+    private function setCompiledViewPath(string $suffix): void
+    {
+        $this->compiledPath = base_path('tests/.compiled-views/' . str_replace('\\', '-', static::class) . '-' . $this->name() . '-' . $suffix);
+        File::deleteDirectory($this->compiledPath);
+        File::ensureDirectoryExists($this->compiledPath);
+
+        config()->set('view.compiled', $this->compiledPath);
     }
 }

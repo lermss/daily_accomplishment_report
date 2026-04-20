@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Report;
 use App\Models\User;
 use App\Services\AuthFlowService;
+use App\Services\ProvincialReminderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,6 +17,7 @@ class StaffNotificationController extends Controller
 {
     public function __construct(
         private readonly AuthFlowService $authFlowService,
+        private readonly ProvincialReminderService $provincialReminderService,
     ) {
     }
 
@@ -27,28 +29,57 @@ class StaffNotificationController extends Controller
             return $user;
         }
 
-        $notifications = Report::query()
+        $reportNotifications = Report::query()
             ->where('user_id', $user->id)
             ->whereIn('status', [Report::STATUS_APPROVED, Report::STATUS_FOR_REVISION])
             ->whereNotNull('reviewed_at')
             ->orderByDesc('reviewed_at')
-            ->limit(10)
             ->get(['id', 'file_name', 'status', 'reviewed_at', 'review_comment'])
             ->map(function (Report $report) use ($user) {
                 return [
-                    'id' => $report->id,
+                    'id' => 'report-' . $report->id,
+                    'entity_id' => $report->id,
+                    'type' => 'report_review',
                     'status' => $report->status,
                     'message' => $report->status === Report::STATUS_APPROVED
                         ? 'Your report has been approved'
                         : 'Your report needs revision',
                     'comment' => $report->review_comment,
                     'file_name' => $report->file_name ?: 'Untitled report',
+                    'timestamp' => $report->reviewed_at,
                     'reviewed_at' => $report->reviewed_at?->format('M d, Y h:i A'),
                     // ADD THIS CODE
                     'route' => route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($user->role, 'reports.show'), ['id' => $report->id]),
                 ];
             })
             ->values();
+
+        $reminderNotifications = $this->provincialReminderService->reminderNotificationsForStaff($user)
+            ->map(function ($reminder) use ($user) {
+                return [
+                    'id' => 'reminder-' . $reminder->id,
+                    'entity_id' => $reminder->id,
+                    'type' => 'office_reminder',
+                    'status' => 'reminder',
+                    'message' => 'Office reminder from your Provincial Head',
+                    'comment' => $reminder->message,
+                    'file_name' => $user->office ?: 'Your office',
+                    'timestamp' => $reminder->triggered_at,
+                    'reviewed_at' => $reminder->triggered_at?->format('M d, Y h:i A'),
+                    'route' => route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($user->role, 'dashboard')),
+                ];
+            });
+
+        $notifications = $reportNotifications
+            ->concat($reminderNotifications)
+            ->sortByDesc(fn (array $notification) => optional($notification['timestamp'])->getTimestamp() ?? 0)
+            ->take(20)
+            ->values()
+            ->map(function (array $notification) {
+                unset($notification['timestamp']);
+
+                return $notification;
+            });
 
         return response()->json([
             'notifications' => $notifications,
@@ -93,7 +124,7 @@ class StaffNotificationController extends Controller
 
     private function unreadCount(User $user): int
     {
-        return Report::query()
+        $reportUnreadCount = Report::query()
             ->where('user_id', $user->id)
             ->whereIn('status', [Report::STATUS_APPROVED, Report::STATUS_FOR_REVISION])
             ->whereNotNull('reviewed_at')
@@ -102,6 +133,8 @@ class StaffNotificationController extends Controller
                 fn ($query) => $query->where('reviewed_at', '>', $user->notifications_read_at)
             )
             ->count();
+
+        return $reportUnreadCount + $this->provincialReminderService->unreadReminderCountForStaff($user);
     }
 
     private function hasNotificationsReadColumn(): bool
@@ -119,6 +152,5 @@ class StaffNotificationController extends Controller
         }
     }
 }
-
 
 

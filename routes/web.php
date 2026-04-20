@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthenticatorAuthorizationController;
+use App\Http\Controllers\Admin\ProvincialReminderController;
 use App\Http\Controllers\Admin\SuperAdminNotificationController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\AuthController;
@@ -134,6 +135,16 @@ Route::controller(AdminDashboardController::class)->group(function () {
             });
     });
 });
+
+Route::controller(ProvincialReminderController::class)
+    ->middleware('role.session:ph-admin')
+    ->prefix('dashboard/admin/reminders')
+    ->name('admin.dashboard.reminders.')
+    ->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/schedule', 'saveSchedule')->name('schedule');
+        Route::post('/send-now', 'sendNow')->name('send-now');
+    });
 
 /*
 |--------------------------------------------------------------------------

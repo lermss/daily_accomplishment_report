@@ -7,15 +7,38 @@
     $staffNotifications = collect();
     $staffUnreadNotificationsCount = 0;
     $staffHasNotificationsReadColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'notifications_read_at');
+    $staffReminderService = app(\App\Services\ProvincialReminderService::class);
 
     if ($staffLayoutUser && in_array((string) $staffLayoutUser->role, ['staff', 'interns', 'special_access'], true)) {
-        $staffNotifications = \App\Models\Report::query()
+        $staffReportNotifications = \App\Models\Report::query()
             ->where('user_id', $staffLayoutUser->id)
             ->whereIn('status', [\App\Models\Report::STATUS_APPROVED, \App\Models\Report::STATUS_FOR_REVISION])
             ->whereNotNull('reviewed_at')
             ->orderByDesc('reviewed_at')
-            ->limit(10)
             ->get(['id', 'file_name', 'status', 'reviewed_at']);
+
+        $staffReminderNotifications = $staffReminderService
+            ->reminderNotificationsForStaff($staffLayoutUser)
+            ->map(function ($reminder) {
+                return (object) [
+                    'id' => 'reminder-' . $reminder->id,
+                    'route' => null,
+                    'file_name' => $reminder->message,
+                    'status' => 'reminder',
+                    'reviewed_at' => $reminder->triggered_at,
+                ];
+            });
+
+        $staffNotifications = $staffReportNotifications
+            ->map(function ($notification) use ($staffPortalPrefix) {
+                $notification->route = route($staffPortalPrefix . '.reports.show', $notification->id);
+
+                return $notification;
+            })
+            ->concat($staffReminderNotifications)
+            ->sortByDesc(fn ($notification) => optional($notification->reviewed_at)->timestamp ?? 0)
+            ->take(20)
+            ->values();
 
         $staffUnreadNotificationsCount = \App\Models\Report::query()
             ->where('user_id', $staffLayoutUser->id)
@@ -26,6 +49,8 @@
                 fn ($query) => $query->where('reviewed_at', '>', $staffLayoutUser->notifications_read_at)
             )
             ->count();
+
+        $staffUnreadNotificationsCount += $staffReminderService->unreadReminderCountForStaff($staffLayoutUser);
     }
 @endphp
 
@@ -82,17 +107,17 @@
                 </div>
                 <div class="notification-panel-body" id="staffNotificationsList">
                     @forelse ($staffNotifications as $notification)
-                        <a href="{{ route($staffPortalPrefix . '.reports.show', $notification->id) }}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="{{ $notification->id }}">
+                        <a href="{{ $notification->route ?: route($staffPortalPrefix . '.dashboard') }}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="{{ $notification->id }}">
                             <span class="notification-indicator" aria-hidden="true"></span>
                             <span class="notification-copy">
                                 <span class="notification-title">
-                                    {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : 'Your report needs revision' }}
+                                    {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : ($notification->status === \App\Models\Report::STATUS_FOR_REVISION ? 'Your report needs revision' : 'Office reminder from your Provincial Head') }}
                                 </span>
                                 <span class="notification-description">{{ $notification->file_name ?: 'Untitled report' }}</span>
                                 <span class="notification-meta">
                                     <small>{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</small>
                                     <span class="notification-status {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'notification-status--success' : 'notification-status--warning' }}">
-                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : 'Needs Revision' }}
+                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : ($notification->status === \App\Models\Report::STATUS_FOR_REVISION ? 'Needs Revision' : 'Reminder') }}
                                     </span>
                                 </span>
                             </span>

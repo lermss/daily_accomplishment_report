@@ -179,6 +179,7 @@
         <div class="form-group">
             <label>Position</label>
             <select name="position">
+                <option value="">Select position</option>
                 @foreach ($positionOptions as $option)
                     <option value="{{ $option }}" {{ $position === $option ? 'selected' : '' }}>
                         {{ $option }}

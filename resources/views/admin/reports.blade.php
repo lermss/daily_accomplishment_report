@@ -27,7 +27,7 @@
                  `data-can-manage` tells the script if the current user can update report status.
                  `data-csrf-token` provides the CSRF token for secure AJAX review actions. --}}
                  
-            <section class="admin-content" data-admin-dashboard data-dashboard-mode="{{ $mode }}" data-can-manage="{{ $canManageReportRecords ? 'true' : 'false' }}" data-csrf-token="{{ csrf_token() }}">
+            <section class="admin-content" data-admin-dashboard data-dashboard-mode="{{ $mode }}" data-can-manage="{{ $canManageReportRecords ? 'true' : 'false' }}" data-csrf-token="{{ csrf_token() }}" data-auto-open-report-id="{{ $autoOpenReportId ?? '' }}">
                 {{-- Flash/status message shown after successful actions. --}}
                 @if (session('status'))
                     <div class="status-message">{{ session('status') }}</div>

@@ -10,6 +10,9 @@
         <a href="{{ route('dashboard.home') }}" class="{{ $active === 'home' ? 'active' : '' }}">Home</a>
         <a href="{{ route('dashboard') }}" class="{{ $active === 'dashboard' ? 'active' : '' }}">Dashboard</a>
         <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
+        @if ($canManageReminders)
+            <a href="{{ route('admin.dashboard.reminders.index') }}" class="{{ $active === 'reminders' ? 'active' : '' }}">Reminders</a>
+        @endif
         @if ($canManageAuthenticatorAccess)
             <a href="{{ route('super-admin.authenticator.index') }}" class="{{ $active === 'authenticator' ? 'active' : '' }}">Authenticator Access</a>
         @endif
@@ -81,7 +84,7 @@
                                     ? 'submitted a report'
                                     : 'submitted ' . ($notification->file_name ?: 'a report file');
                             @endphp
-                            <a href="{{ $notificationRoute }}" class="notification-item notification-item--unread">
+                            <a href="{{ $notification->route }}" class="notification-item notification-item--unread">
                                 <span class="notification-indicator" aria-hidden="true"></span>
                                 <span class="notification-copy">
                                     <span class="notification-title">{{ $notification->user_name ?: 'A user' }}</span>
