@@ -33,7 +33,7 @@ class AuthFlowService
     {
         $user = $this->authenticatedUser($request);
 
-        if (!$user || $user->status !== 'active') {
+        if (!$user || $user->status !== 'active' || ! $user->is_authorized) {
             $request->session()->forget([
                 'authenticated_user_id',
                 'otp_login_email',

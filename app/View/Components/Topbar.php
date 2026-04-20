@@ -15,6 +15,7 @@ class Topbar extends Component
     public bool $isAdminNavigation;
     public bool $isSuperAdminNavigation;
     public bool $canViewNotifications;
+    public bool $canManageAuthenticatorAccess;
     public string $reportsRoute;
     public string $notificationRoute;
     public Collection $submissionNotifications;
@@ -32,6 +33,7 @@ class Topbar extends Component
         $this->isAdminNavigation = $this->user !== null && $authFlowService->isAdminRole($this->user->role);
         $this->isSuperAdminNavigation = $this->user !== null && $authFlowService->isSuperAdminRole($this->user->role);
         $this->canViewNotifications = $this->isAdminNavigation || $this->isSuperAdminNavigation;
+        $this->canManageAuthenticatorAccess = $this->isSuperAdminNavigation;
         $this->reportsRoute = $this->isSuperAdminNavigation ? route('reports.index') : route('admin.dashboard.employees');
         $this->notificationRoute = $this->isSuperAdminNavigation ? route('super-admin.notifications.index') : route('admin.dashboard.pending');
         $this->submissionNotifications = collect();

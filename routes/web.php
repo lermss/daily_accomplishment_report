@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\AuthenticatorAuthorizationController;
 use App\Http\Controllers\Admin\SuperAdminNotificationController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\AuthController;
@@ -103,6 +104,15 @@ Route::controller(AdminDashboardController::class)->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::post('/mark-all-read', 'markAllRead')->name('mark-all-read');
                 Route::post('/{notification}/mark-read', 'markRead')->name('mark-read');
+            });
+
+        Route::controller(AuthenticatorAuthorizationController::class)
+            ->prefix('dashboard/super-admin/authenticator')
+            ->name('super-admin.authenticator.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/{targetUser}/authorize', 'authorize')->name('authorize');
+                Route::post('/{targetUser}/revoke', 'revoke')->name('revoke');
             });
 
     });
@@ -276,10 +286,8 @@ Route::redirect('/super-admin/verify-otp', '/verify-otp')->name('super_admin.sup
 Route::redirect('/admin/dashboard', '/dashboard/admin')->name('admin.dashboard');
 Route::redirect('/super-admin/dashboard', '/dashboard/super-admin')->name('super_admin.superAdmin.dashboard');
 Route::middleware('2fa.pending')->group(function () {
-    Route::get('/2fa/verify', [AuthController::class, 'show2faForm'])->name('auth.2fa.verify.form');
+    Route::get('/2fa/verify', [AuthController::class, 'showVerifyForm'])->name('auth.2fa.verify.form');
     Route::post('/2fa/verify', [AuthController::class, 'verify2fa'])->name('auth.2fa.verify');
 });
 
-Route::get('/2fa/setup', [AuthController::class, 'setup2fa'])->name('auth.2fa.setup');
-Route::post('/2fa/enable', [AuthController::class, 'enable2fa'])->name('auth.2fa.enable');
 Route::post('/2fa/disable', [AuthController::class, 'disable2fa'])->name('auth.2fa.disable');

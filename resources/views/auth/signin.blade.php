@@ -443,7 +443,7 @@
           <div class="signin-panel-inner">
             <div class="signin-copy">
               <h2>Sign In</h2>
-              <p class="signin-subcopy">Enter your active email address to receive a one-time verification code.</p>
+              <p class="signin-subcopy">Enter the email address authorized by the super admin. Your Google Authenticator QR code and manual setup key are sent from the Authenticator Access page, and login continues directly to the authenticator code screen.</p>
 
               <div class="signin-feedback-stack">
                 @if (session('status'))
@@ -477,7 +477,7 @@
               </div>
 
               <button type="submit" class="otp-button" data-send-otp-button>
-                <span class="otp-button-text">Send OTP</span>
+                <span class="otp-button-text">Continue</span>
                 <span aria-hidden="true">&rsaquo;</span>
               </button>
             </form>
@@ -505,7 +505,7 @@
 
         button.disabled = true;
         button.setAttribute('aria-disabled', 'true');
-        button.querySelector('.otp-button-text').textContent = 'Sending OTP...';
+        button.querySelector('.otp-button-text').textContent = 'Checking account...';
       });
     });
   </script>

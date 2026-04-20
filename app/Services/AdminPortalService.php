@@ -541,9 +541,18 @@ class AdminPortalService
             'institution' => $details['institution'] ?? null,
             'role' => $validated['role'],
             'status' => 'active',
+            'is_authorized' => false,
             'otp_code' => null,
             'otp_hash' => null,
             'otp_expiration' => null,
+            'google2fa_secret' => null,
+            'google2fa_enabled' => false,
+            'two_factor_confirmed_at' => null,
+            'google2fa_authorization_code_hash' => null,
+            'google2fa_authorization_code_expires_at' => null,
+            'google2fa_authorization_sent_at' => null,
+            'google2fa_authorized_by' => null,
+            'google2fa_authorized_at' => null,
         ]);
 
         $this->logActivity($actor, 'user_created', 'Created user account for ' . $validated['email'] . '.');

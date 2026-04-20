@@ -10,6 +10,9 @@
         <a href="{{ route('dashboard.home') }}" class="{{ $active === 'home' ? 'active' : '' }}">Home</a>
         <a href="{{ route('dashboard') }}" class="{{ $active === 'dashboard' ? 'active' : '' }}">Dashboard</a>
         <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
+        @if ($canManageAuthenticatorAccess)
+            <a href="{{ route('super-admin.authenticator.index') }}" class="{{ $active === 'authenticator' ? 'active' : '' }}">Authenticator Access</a>
+        @endif
 
         @if ($canAccessAudit || $isAdminNavigation)
             <a href="{{ route('audit.index') }}" class="{{ $active === 'audit' ? 'active' : '' }}">Audit Log</a>
