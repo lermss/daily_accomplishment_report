@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AdminPortalService;
 use App\Services\AuthFlowService;
-use App\Services\SuperAdminNotificationService;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +22,6 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthFlowService $authFlowService,
         private readonly AdminPortalService $adminPortalService,
-        private readonly SuperAdminNotificationService $superAdminNotificationService,
     ) {
     }
 
