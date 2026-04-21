@@ -84,7 +84,7 @@ class AuthenticatorAuthorizationController extends Controller
             return back()->with('authenticator_error', 'Only active accounts can be authorized for login.');
         }
 
-        if ($this->authFlowService->isSuperAdminRole($targetUser->role)) {
+        if ((string) $targetUser->role === 'super_admin') {
             return back()->with('authenticator_error', 'Use the seed or admin workflow for super admin access management.');
         }
 

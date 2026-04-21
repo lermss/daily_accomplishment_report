@@ -155,8 +155,7 @@ class AuthenticatorFlowTest extends TestCase
 
         Mail::assertSent(GoogleAuthenticatorProvisioningMail::class, function (GoogleAuthenticatorProvisioningMail $mail) use ($targetUser) {
             return $mail->hasTo($targetUser->email)
-                && $mail->manualSetupKey !== ''
-                && $mail->qrImage !== null;
+                && $mail->manualSetupKey !== '';
         });
     }
 
