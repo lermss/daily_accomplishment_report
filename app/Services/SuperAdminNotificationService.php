@@ -84,6 +84,36 @@ class SuperAdminNotificationService
             ]);
     }
 
+    /**
+     * Create a real-time notification when a staff/intern submits a report.
+     * Called from ReportWorkflowService::submitReport().
+     */
+    public function recordReportSubmission(\App\Models\Report $report, \App\Models\User $staffUser): void
+    {
+        if (! $this->notificationsTableExists()) {
+            return;
+        }
+
+        $fileName  = $report->file_name ?: ('Report #' . $report->id);
+        $staffName = $staffUser->name ?? 'A staff member';
+        $office    = $staffUser->office ? ' (' . $staffUser->office . ')' : '';
+
+        $this->upsertNotification('report-submission:' . $report->id, [
+            'title'        => $staffName . ' submitted a report',
+            'message'      => $staffName . $office . ' submitted "' . $fileName . '" and it is now awaiting your review.',
+            'type'         => SuperAdminNotification::TYPE_REVIEW,
+            'action_label' => 'Review Now',
+            'action_url'   => route('reports.pending'),
+            'meta'         => [
+                'report_id'  => $report->id,
+                'staff_id'   => $staffUser->id,
+                'staff_name' => $staffName,
+                'office'     => $staffUser->office,
+                'file_name'  => $fileName,
+            ],
+        ]);
+    }
+
     public function recordOtpAbuseAttempt(string $email, Request $request, int $remainingSeconds): void
     {
         if (! $this->notificationsTableExists()) {

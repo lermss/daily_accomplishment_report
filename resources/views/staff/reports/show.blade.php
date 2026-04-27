@@ -8,8 +8,9 @@
 
 <style>
 body {
-    background: #f3f5f7;
+    background: linear-gradient(145deg, #f0f4f9 0%, #e8eef6 100%);
     font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
 }
@@ -23,6 +24,7 @@ body {
     background: #fff;
     border: 1px solid #d8dde3;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    border-radius: 16px;
     font-size: 12pt;
     line-height: 1.65;
 }
@@ -67,7 +69,7 @@ body {
     vertical-align: top;
 }
 
-/* TEXTAREA FIX (MAIN IMPROVEMENT) */
+/* TEXTAREA */
 .table textarea {
     width: 100%;
     min-height: 60px;
@@ -95,7 +97,6 @@ body {
     font-size: 11pt;
 }
 
-/* readonly */
 .readonly-field {
     background: transparent;
     border: none;
@@ -103,25 +104,55 @@ body {
     cursor: default;
 }
 
-/* Buttons */
-.btn {
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-weight: 500;
+/* ── BACK LINK ── */
+.back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; color: #475569; font-size: .875rem; font-weight: 500;
+    margin-bottom: 16px; transition: color .15s;
 }
+.back-link:hover { color: #1e40af; }
+.back-link svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ── PREMIUM BUTTONS ── */
+.btn-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 22px; border: none; border-radius: 50px;
+    font-family: inherit; font-size: .875rem; font-weight: 600;
+    cursor: pointer; transition: transform .18s, box-shadow .18s;
+    text-decoration: none;
+}
+.btn-pill:hover { transform: translateY(-2px); }
+.btn-pill:disabled, .btn-pill[disabled] {
+    opacity: .55; cursor: not-allowed; transform: none !important;
+}
+.btn-pill-green  { background: linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 4px 14px rgba(22,163,74,.3); }
+.btn-pill-green:hover  { box-shadow:0 8px 22px rgba(22,163,74,.45); }
+.btn-pill-blue   { background: linear-gradient(135deg,#1e40af,#1d4ed8); color:#fff; box-shadow:0 4px 14px rgba(29,78,216,.3); }
+.btn-pill-blue:hover   { box-shadow:0 8px 22px rgba(29,78,216,.45); }
+.btn-pill-slate  { background: linear-gradient(135deg,#475569,#334155); color:#fff; box-shadow:0 4px 14px rgba(51,65,85,.25); }
+.btn-pill-red    { background: linear-gradient(135deg,#dc2626,#b91c1c); color:#fff; box-shadow:0 4px 14px rgba(220,38,38,.3); }
+.btn-pill-red:hover    { box-shadow:0 8px 22px rgba(220,38,38,.45); }
+.btn-pill-amber  { background: linear-gradient(135deg,#d97706,#b45309); color:#fff; box-shadow:0 4px 14px rgba(217,119,6,.3); }
+.btn-pill-amber:hover  { box-shadow:0 8px 22px rgba(217,119,6,.45); }
+
+.action-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 20px; flex-wrap: wrap; gap: 10px;
+}
+.action-bar-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .table th,
-    .table td {
-        font-size: 10pt;
-        padding: 6px;
-    }
+    .table th, .table td { font-size: 10pt; padding: 6px; }
+    .action-bar { flex-direction: column; align-items: stretch; }
+    .action-bar-right { flex-direction: column; }
+    .btn-pill { justify-content: center; }
 }
 </style>
 
-<a href="{{ route($staffRouteBase . '.reports.index') }}" class="btn btn-secondary mb-3">
-    &lt; Back
+<a href="{{ route($staffRouteBase . '.reports.index') }}" class="back-link">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Reports
 </a>
 
 <div class="card card-a4">
@@ -183,8 +214,9 @@ body {
         </table>
 
         @if($report->status !== 'approved')
-        <button type="button" class="btn btn-info mt-2" id="addRowBtn">
-            + Add Row
+        <button type="button" class="btn-pill btn-pill-green mt-3" id="addRowBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Row
         </button>
         @endif
     </form>
@@ -195,33 +227,42 @@ body {
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <div class="mt-3 d-flex justify-content-end gap-2">
+    <div class="action-bar">
+        <div><!-- spacer --></div>
+        <div class="action-bar-right">
 
-        @if($report->status !== 'approved')
-            <button type="submit" form="updateForm" class="btn btn-primary" id="saveBtn">
-                Save
+            @if($report->status !== 'approved')
+                <button type="submit" form="updateForm" class="btn-pill btn-pill-blue" id="saveBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                </button>
+            @else
+                <button class="btn-pill btn-pill-slate" disabled>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Locked
+                </button>
+            @endif
+
+            @if($report->status !== 'approved')
+            <form id="submitReportForm" action="{{ route($staffRouteBase . '.reports.submit',$report->id) }}" method="POST" style="display:contents;">
+                @csrf
+                <button type="button" class="btn-pill btn-pill-amber" id="submitBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Submit
+                </button>
+            </form>
+            @endif
+
+            <button
+                class="btn-pill btn-pill-red {{ in_array($report->status, ['pending', 'for_revision']) ? 'opacity-50' : '' }}"
+                {{ in_array($report->status, ['pending', 'for_revision']) ? 'disabled title="PDF export unavailable while pending or for revision"' : '' }}
+                onclick="if (!{{ in_array($report->status, ['pending', 'for_revision']) ? 'true' : 'false' }}) window.location.href='{{ route($staffRouteBase . '.reports.pdf',$report->id) }}'"
+            >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Export PDF
             </button>
-        @else
-            <button class="btn btn-secondary" disabled>
-                Locked
-            </button>
-        @endif
 
-        @if($report->status !== 'approved')
-        <form id="submitReportForm" action="{{ route($staffRouteBase . '.reports.submit',$report->id) }}" method="POST" style="display: contents;">
-            @csrf
-            <button type="button" class="btn btn-success" id="submitBtn">Submit</button>
-        </form>
-        @endif
-
-        <button 
-            class="btn btn-danger {{ in_array($report->status, ['pending', 'for_revision']) ? 'opacity-50 cursor-not-allowed' : '' }}"
-            {{ in_array($report->status, ['pending', 'for_revision']) ? 'disabled title="PDF export is unavailable while status is pending or for revision"' : '' }}
-            onclick="if (!{{ in_array($report->status, ['pending', 'for_revision']) ? 'true' : 'false' }}) window.location.href='{{ route($staffRouteBase . '.reports.pdf',$report->id) }}'"
-        >
-            Export PDF
-        </button>
-
+        </div>
     </div>
 
 </div>

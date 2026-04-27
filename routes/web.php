@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthenticatorAuthorizationController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProvincialReminderController;
 use App\Http\Controllers\Admin\SuperAdminNotificationController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -146,6 +147,14 @@ Route::controller(ProvincialReminderController::class)
         Route::post('/send-now', 'sendNow')->name('send-now');
     });
 
+Route::middleware('role.session:ph-admin')
+    ->prefix('dashboard/admin/notifications')
+    ->name('admin.dashboard.notifications.')
+    ->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+    });
+
 /*
 |--------------------------------------------------------------------------
 | User Management, Audit, And Profile
@@ -154,7 +163,7 @@ Route::controller(ProvincialReminderController::class)
 
 Route::controller(UserManagementController::class)->group(function () {
     Route::middleware('role.session:admin,ph-admin,super_admin,hr-super-admin')->group(function () {
-        Route::get('/dashboard/users', 'users')->name('dashboard.users');
+        Route::get('super-admin/users', 'users')->name('dashboard.users');
         Route::get('/dashboard/archive', 'archive')->name('dashboard.archive');
         Route::get('/dashboard/active', 'active')->name('dashboard.active');
 
@@ -168,6 +177,11 @@ Route::controller(UserManagementController::class)->group(function () {
                 Route::post('/{targetUser}/restore', 'restoreUser')->name('restore');
             });
     });
+
+    // Provincial Head Admin: view staff/interns in their assigned office
+    Route::middleware('role.session:ph-admin')
+        ->get('/dashboard/admin/users', 'officeUsers')
+        ->name('dashboard.admin.users');
 });
 
 Route::get('/audit-log', [AuditController::class, 'index'])

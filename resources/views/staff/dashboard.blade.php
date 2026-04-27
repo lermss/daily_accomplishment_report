@@ -6,239 +6,179 @@
         $staffRouteBase = app(\App\Services\AuthFlowService::class)->staffPortalPrefix(session('authenticated_user_role', session('role', optional(\App\Models\User::find(session('authenticated_user_id')))->role)));
     @endphp
     <style>
-        /* General Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-        body {
-            background: #f4f6f9;
-        }
+        body { background: linear-gradient(145deg, #f0f4f9 0%, #e8eef6 100%); min-height: 100vh; }
 
-        .container {
-            padding: 30px 60px;
-        }
+        .container { padding: 32px 48px; max-width: 1440px; }
 
-        /* Cards */
+        /* ── STAT CARDS ── */
         .cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
-            margin-bottom: 25px;
+            gap: 20px;
+            margin-bottom: 28px;
         }
 
         .card {
             position: relative;
-            border-radius: 18px;
-            padding: 22px;
+            border-radius: 20px;
+            padding: 22px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #ffffff, #f8fafc);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+            background: #ffffff;
+            box-shadow: 0 2px 16px rgba(0,0,0,.07);
             overflow: hidden;
-            transition: all 0.35s ease;
+            transition: transform .3s ease, box-shadow .3s ease;
             cursor: pointer;
+            text-decoration: none;
+            border: 1.5px solid transparent;
         }
 
-        .card.active {
-            border: 2px solid #6366f1;
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 4px; height: 100%; border-radius: 20px 0 0 20px;
         }
+        .card:nth-child(1)::before { background: linear-gradient(180deg,#6366f1,#4f46e5); }
+        .card:nth-child(2)::before { background: linear-gradient(180deg,#22c55e,#16a34a); }
+        .card:nth-child(3)::before { background: linear-gradient(180deg,#f59e0b,#d97706); }
+        .card:nth-child(4)::before { background: linear-gradient(180deg,#ef4444,#dc2626); }
 
         .card::after {
-            content: "";
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            top: -30px;
-            right: -30px;
-            opacity: 0.15;
-            transition: 0.4s;
+            content: ''; position: absolute; width: 140px; height: 140px;
+            border-radius: 50%; top: -40px; right: -40px; opacity: .06; transition: .4s;
         }
+        .card:nth-child(1)::after { background: #6366f1; }
+        .card:nth-child(2)::after { background: #22c55e; }
+        .card:nth-child(3)::after { background: #f59e0b; }
+        .card:nth-child(4)::after { background: #ef4444; }
 
-        .card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
-        }
+        .card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,.12); }
+        .card:hover::after { transform: scale(1.4); opacity: .12; }
 
-        .card:hover::after {
-            transform: scale(1.3);
-            opacity: 0.25;
-        }
+        .card:nth-child(1).active { border-color: #6366f1; box-shadow: 0 8px 28px rgba(99,102,241,.2); }
+        .card:nth-child(2).active { border-color: #22c55e; box-shadow: 0 8px 28px rgba(34,197,94,.2); }
+        .card:nth-child(3).active { border-color: #f59e0b; box-shadow: 0 8px 28px rgba(245,158,11,.2); }
+        .card:nth-child(4).active { border-color: #ef4444; box-shadow: 0 8px 28px rgba(239,68,68,.2); }
 
         .card h4 {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 6px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
+            font-size: 11px; color: #6b7280; margin-bottom: 6px;
+            font-weight: 600; letter-spacing: .6px; text-transform: uppercase;
         }
-
-        .card h2 {
-            font-size: 34px;
-            font-weight: 700;
-            color: #111827;
-        }
+        .card h2 { font-size: 36px; font-weight: 700; color: #111827; line-height: 1; }
 
         .card-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: 0.3s;
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; transition: transform .3s ease; flex-shrink: 0;
+        }
+        .card:hover .card-icon { transform: rotate(8deg) scale(1.1); }
+
+        .icon-blue  { background: linear-gradient(135deg,#818cf8,#4f46e5); color:#fff; box-shadow: 0 8px 20px rgba(99,102,241,.35); }
+        .icon-green { background: linear-gradient(135deg,#4ade80,#16a34a); color:#fff; box-shadow: 0 8px 20px rgba(34,197,94,.35); }
+        .icon-yellow{ background: linear-gradient(135deg,#fcd34d,#d97706); color:#fff; box-shadow: 0 8px 20px rgba(245,158,11,.35); }
+        .icon-red   { background: linear-gradient(135deg,#f87171,#dc2626); color:#fff; box-shadow: 0 8px 20px rgba(239,68,68,.35); }
+
+        /* ── SEARCH ── */
+        .search-box { margin-bottom: 18px; }
+        .search-box form { display: flex; gap: 10px; align-items: center; }
+
+        .search-box input[type="text"] {
+            width: 340px; padding: 11px 20px; border-radius: 50px;
+            border: 1.5px solid #e5e7eb; background: #fff; font: inherit;
+            font-size: .875rem; color: #374151; outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .search-box input[type="text"]:focus {
+            border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12);
         }
 
-        .card:hover .card-icon {
-            transform: rotate(6deg) scale(1.1);
+        .search-box button, .search-box a {
+            padding: 11px 22px; border-radius: 50px; border: 1.5px solid #e5e7eb;
+            background: #fff; font: inherit; font-size: .875rem; color: #374151;
+            cursor: pointer; text-decoration: none;
+            transition: all .2s; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+        .search-box button:hover, .search-box a:hover { background: #f3f4f6; border-color: #d1d5db; }
+
+        /* ── TABLE PANEL ── */
+        #bulkDeleteForm {
+            background: #ffffff; border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.07);
+            overflow: hidden; border: 1px solid #f1f5f9;
         }
 
-        /* Card Color Themes */
-        .icon-blue {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: white;
-        }
+        .table { width: 100%; border-collapse: collapse; background: transparent; }
 
-        .card:nth-child(1)::after {
-            background: #6366f1;
-        }
+        .table thead { background: linear-gradient(135deg,#f8fafc,#f1f5f9); border-bottom: 2px solid #e9eef5; }
 
-        .icon-green {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
+        .table th {
+            padding: 14px 18px; text-align: left; font-size: 11px;
+            font-weight: 700; color: #64748b; letter-spacing: .7px; text-transform: uppercase;
         }
-
-        .card:nth-child(2)::after {
-            background: #22c55e;
-        }
-
-        .icon-yellow {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
-
-        .card:nth-child(3)::after {
-            background: #f59e0b;
-        }
-
-        .icon-red {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .card:nth-child(4)::after {
-            background: #ef4444;
-        }
-
-        /* Search Bar */
-        .search-box {
-            margin-bottom: 15px;
-        }
-
-        .search-box input {
-            width: 300px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-        }
-
-        /* Table */
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .table thead {
-            background: #e9eef3;
-        }
-
-        .table th,
         .table td {
-            padding: 14px;
-            text-align: left;
-            font-size: 14px;
+            padding: 14px 18px; text-align: left; font-size: 13.5px;
+            color: #374151; border-bottom: 1px solid #f1f5f9;
         }
+        .table tbody tr { transition: background .15s; }
+        .table tbody tr:hover { background: #fafbff; }
+        .table tbody tr:last-child td { border-bottom: none; }
 
-        .table tbody tr {
-            border-bottom: 1px solid #eee;
-        }
+        .table a { color: #4f46e5; text-decoration: none; font-weight: 500; }
+        .table a:hover { text-decoration: underline; }
 
-        /* Status Badges */
+        /* ── STATUS BADGES ── */
         .status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
+            padding: 4px 12px; border-radius: 50px; font-size: 11.5px;
+            font-weight: 600; display: inline-block; letter-spacing: .3px;
         }
+        .pending      { background: #fef9c3; color: #854d0e; box-shadow: 0 0 0 1px #fde68a; }
+        .approved     { background: #dcfce7; color: #14532d; box-shadow: 0 0 0 1px #86efac; }
+        .for_revision { background: #fee2e2; color: #7f1d1d; box-shadow: 0 0 0 1px #fca5a5; }
 
-        .pending {
-            background: #fff4d6;
-            color: #b7791f;
-        }
-
-        .approved {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .for_revision {
-            background: #ffe4e6;
-            color: #b91c1c;
-        }
-
-        /* Review Note */
+        /* ── REVIEW NOTE ── */
         .review-note {
-            margin-top: 6px;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #92400e;
-            white-space: pre-wrap;
+            margin-top: 5px; font-size: 11.5px; line-height: 1.45;
+            color: #92400e; white-space: pre-wrap;
+            background: #fffbeb; border-left: 3px solid #f59e0b;
+            padding: 4px 8px; border-radius: 0 4px 4px 0;
         }
 
-        /* Export Buttons */
+        /* ── EXPORT BUTTON ── */
         .export-btn {
-            border: none;
-            padding: 6px 16px;
-            border-radius: 20px;
-            background: #1f4e79;
-            color: white;
-            cursor: pointer;
-            font-size: 13px;
+            border: none; padding: 6px 16px; border-radius: 50px;
+            background: linear-gradient(135deg,#1e40af,#1d4ed8);
+            color: #fff; cursor: pointer; font-size: 12px; font-weight: 500;
+            font-family: inherit; transition: box-shadow .2s, transform .2s;
+            box-shadow: 0 4px 12px rgba(29,78,216,.3);
+        }
+        .export-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(29,78,216,.4); }
+        .export-btn:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+
+        /* ── DELETE SELECTED BUTTON ── */
+        #deleteSelectedBtn {
+            background: linear-gradient(135deg,#dc2626,#b91c1c) !important;
+            border: none !important; color: #fff !important;
+            padding: 10px 24px; border-radius: 50px !important;
+            font: inherit; font-size: .875rem; font-weight: 600;
+            cursor: pointer; box-shadow: 0 4px 16px rgba(220,38,38,.3);
+            transition: box-shadow .2s, transform .2s; margin: 16px;
+        }
+        #deleteSelectedBtn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(220,38,38,.4); }
+        #deleteSelectedBtn:disabled { background: #d1d5db !important; box-shadow: none; cursor: not-allowed; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) { .cards { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 640px)  {
+            .container { padding: 20px 16px; }
+            .cards { grid-template-columns: 1fr; }
+            .search-box input[type="text"] { width: 100%; }
         }
 
-        .export-btn:hover:not(:disabled) {
-            opacity: 0.9;
-        }
-
-        .export-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 500px) {
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
+
 
     @php
         // Counts are passed from the controller and must remain static.

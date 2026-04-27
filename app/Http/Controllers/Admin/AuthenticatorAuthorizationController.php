@@ -30,7 +30,14 @@ class AuthenticatorAuthorizationController extends Controller
             return $actor;
         }
 
-        $search = trim((string) $request->query('search', ''));
+        $search     = trim((string) $request->query('search', ''));
+        $roleFilter = trim((string) $request->query('role_filter', ''));
+        $allowedRoleFilters = ['staff', 'interns', 'ph-admin', 'hr-super-admin'];
+
+        if ($roleFilter !== '' && !in_array($roleFilter, $allowedRoleFilters, true)) {
+            $roleFilter = '';
+        }
+
         $users = User::query()
             ->when($search !== '', function ($query) use ($search) {
                 $like = '%' . $search . '%';
@@ -46,6 +53,7 @@ class AuthenticatorAuthorizationController extends Controller
                         ->orWhere('office', 'like', $like);
                 });
             })
+            ->when($roleFilter !== '', fn ($q) => $q->where('role', $roleFilter))
             ->orderBy('name')
             ->get([
                 'id',
@@ -64,10 +72,10 @@ class AuthenticatorAuthorizationController extends Controller
             ]);
 
         return view('super_admin.authenticator-authorizations', [
-            'title' => 'Authenticator Authorizations',
-            'user' => $actor,
-            'search' => $search,
-            'users' => $users,
+            'title'          => 'Authenticator Authorizations',
+            'user'           => $actor,
+            'search'         => $search,
+            'users'          => $users,
             'canAccessAudit' => $this->authFlowService->canAccessAudit($actor->role),
         ]);
     }

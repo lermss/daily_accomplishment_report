@@ -112,7 +112,16 @@
         .notification-feed {
             display: grid;
             gap: 18px;
+            max-height: calc(100vh - 320px);
+            overflow-y: auto;
+            padding-right: 4px; /* prevent scrollbar overlap */
+            scroll-behavior: smooth;
         }
+        /* Custom scrollbar for the feed */
+        .notification-feed::-webkit-scrollbar { width: 6px; }
+        .notification-feed::-webkit-scrollbar-track { background: transparent; }
+        .notification-feed::-webkit-scrollbar-thumb { background: #c7d8eb; border-radius: 99px; }
+        .notification-feed::-webkit-scrollbar-thumb:hover { background: #94b8d6; }
 
         .notification-page-card {
             display: flex;

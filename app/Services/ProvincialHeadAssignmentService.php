@@ -98,14 +98,14 @@ class ProvincialHeadAssignmentService
             return $query;
         }
 
+        // Match reports where:
+        // 1. Explicitly assigned to this reviewer, OR
+        // 2. The report's submitting staff is in the same office as this reviewer
+        //    (handles reassignments, deleted PH Admin accounts, etc.)
         return $query->where(function ($officeQuery) use ($reviewer) {
             $officeQuery
                 ->where('assigned_provincial_head_id', $reviewer->id)
-                ->orWhere(function ($fallbackQuery) use ($reviewer) {
-                    $fallbackQuery
-                        ->whereNull('assigned_provincial_head_id')
-                        ->whereHas('user', fn ($userQuery) => $userQuery->where('office', $reviewer->office));
-                });
+                ->orWhereHas('user', fn ($userQuery) => $userQuery->where('office', $reviewer->office));
         });
     }
 }

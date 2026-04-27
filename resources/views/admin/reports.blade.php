@@ -18,7 +18,7 @@
     <div class="admin-page">
         <main class="admin-shell">
             {{-- Top navigation bar for admin pages. --}}
-            <x-topbar :active="$isSuperAdminView ? 'reports' : 'dashboard'" :can-access-audit="$canAccessAudit" :user="$user" />
+            <x-topbar :active="$isSuperAdminView ? 'reports' : ($mode === 'dashboard' ? 'dashboard' : 'reports')" :can-access-audit="$canAccessAudit" :user="$user" />
 
 
             {{-- Main dashboard container.

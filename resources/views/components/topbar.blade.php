@@ -9,9 +9,19 @@
     <nav class="nav-right" aria-label="Primary">
         <a href="{{ route('dashboard.home') }}" class="{{ $active === 'home' ? 'active' : '' }}">Home</a>
         <a href="{{ route('dashboard') }}" class="{{ $active === 'dashboard' ? 'active' : '' }}">Dashboard</a>
-        <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
+        @if ($isAdminNavigation)
+            <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
+        @elseif ($isSuperAdminNavigation)
+            <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
+        @endif
         @if ($canManageReminders)
             <a href="{{ route('admin.dashboard.reminders.index') }}" class="{{ $active === 'reminders' ? 'active' : '' }}">Reminders</a>
+        @endif
+        @if ($canViewOfficeUsers)
+            <a href="{{ route('dashboard.admin.users') }}" class="{{ $active === 'users' ? 'active' : '' }}">Users</a>
+        @endif
+        @if ($canViewSuperAdminUsers)
+            <a href="{{ route('dashboard.users') }}" class="{{ $active === 'users' ? 'active' : '' }}">Users</a>
         @endif
         @if ($canManageAuthenticatorAccess)
             <a href="{{ route('super-admin.authenticator.index') }}" class="{{ $active === 'authenticator' ? 'active' : '' }}">Authenticator Access</a>

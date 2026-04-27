@@ -182,8 +182,10 @@
                                                     <div><span>Status</span><strong>{{ $log['status'] }}</strong></div>
                                                     <div><span>Date</span><strong>{{ $log['created_at'] ? $log['created_at']->format('M d, Y') : 'N/A' }}</strong></div>
                                                     <div><span>Time</span><strong>{{ $log['created_at'] ? $log['created_at']->format('h:i A') : 'N/A' }}</strong></div>
-                                                    <div><span>IP Address</span><strong>{{ $log['ip_address'] }}</strong></div>
-                                                    <div><span>Device</span><strong>{{ $log['device'] }}</strong></div>
+                                                    @unless ($isPHAdmin ?? false)
+                                                        <div><span>IP Address</span><strong>{{ $log['ip_address'] }}</strong></div>
+                                                        <div><span>Device</span><strong>{{ $log['device'] }}</strong></div>
+                                                    @endunless
                                                 </div>
                                                 <div class="audit-detail-description">
                                                     <span>Description</span>

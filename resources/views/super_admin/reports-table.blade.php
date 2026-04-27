@@ -81,8 +81,8 @@
                                         <td><div class="file-cell"><strong>{{ $report->file_name ?: 'No file uploaded' }}</strong></div></td>
                                         <td>{{ $submittedAt ? \Illuminate\Support\Carbon::parse($submittedAt)->format('m/d/Y') : 'N/A' }}</td>
                                         <td><span class="status-pill {{ $statusClass }}" data-status-pill>{{ ucfirst(str_replace('_', ' ', $report->status ?? 'unknown')) }}</span></td>
-                                        <td><div class="action-stack"><button type="button" class="action-button" data-open-report-modal data-report='@json($reportPayload)' disabled><svg viewBox="0 0 24 24"><path d="M12 5c5.5 0 9.55 4.03 10.75 6.22a1.45 1.45 0 0 1 0 1.56C21.55 14.97 17.5 19 12 19S2.45 14.97 1.25 12.78a1.45 1.45 0 0 1 0-1.56C2.45 9.03 6.5 5 12 5Zm0 2C7.64 7 4.23 10.02 3.28 12 4.23 13.98 7.64 17 12 17s7.77-3.02 8.72-5C19.77 10.02 16.36 7 12 7Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Z"/></svg>
-                                        <span>{{ $canManageReportRecords ? 'View & Review' : 'View' }}</span></button></div></td>
+                                        <td><div class="action-stack"><button type="button" class="action-button" data-open-report-modal data-report='@json($reportPayload)'><svg viewBox="0 0 24 24"><path d="M12 5c5.5 0 9.55 4.03 10.75 6.22a1.45 1.45 0 0 1 0 1.56C21.55 14.97 17.5 19 12 19S2.45 14.97 1.25 12.78a1.45 1.45 0 0 1 0-1.56C2.45 9.03 6.5 5 12 5Zm0 2C7.64 7 4.23 10.02 3.28 12 4.23 13.98 7.64 17 12 17s7.77-3.02 8.72-5C19.77 10.02 16.36 7 12 7Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Z"/></svg>
+                                        <span>View</span></button></div></td>
                                     </tr>
                                 @empty
                                     <tr data-empty-state-row><td colspan="5" class="empty-state">No reports found yet. Once staff submissions are stored, they will appear here.</td></tr>

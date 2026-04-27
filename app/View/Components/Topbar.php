@@ -17,6 +17,8 @@ class Topbar extends Component
     public bool $canViewNotifications;
     public bool $canManageAuthenticatorAccess;
     public bool $canManageReminders;
+    public bool $canViewOfficeUsers;
+    public bool $canViewSuperAdminUsers;
     public string $reportsRoute;
     public string $notificationRoute;
     public Collection $submissionNotifications;
@@ -36,8 +38,14 @@ class Topbar extends Component
         $this->canViewNotifications = $this->isAdminNavigation || $this->isSuperAdminNavigation;
         $this->canManageAuthenticatorAccess = $this->isSuperAdminNavigation;
         $this->canManageReminders = $this->user?->role === 'ph-admin';
+        $this->canViewOfficeUsers = $this->user?->role === 'ph-admin';
+        $this->canViewSuperAdminUsers = $this->isSuperAdminNavigation;
         $this->reportsRoute = $this->isSuperAdminNavigation ? route('reports.index') : route('admin.dashboard.employees');
-        $this->notificationRoute = $this->isSuperAdminNavigation ? route('super-admin.notifications.index') : route('dashboard.admin');
+        $this->notificationRoute = $this->isSuperAdminNavigation
+            ? route('super-admin.notifications.index')
+            : ($this->user?->role === 'ph-admin'
+                ? route('admin.dashboard.notifications.index')
+                : route('dashboard.admin'));
         $this->submissionNotifications = collect();
         $this->pendingNotificationsCount = 0;
         $this->superAdminNotifications = collect();

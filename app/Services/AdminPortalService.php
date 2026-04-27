@@ -98,9 +98,21 @@ class AdminPortalService
                 'division', 'office', 'institution', 'role', 'status',
             ]);
 
-        $allUsersCount = $this->managedUsersQuery()->count();
-        $archiveCount  = $this->managedUsersQuery('', 'archive')->count();
-        $activeCount   = $this->managedUsersQuery('', 'active')->count();
+        $allUsersCount  = $this->managedUsersQuery()->count();
+        $archiveCount   = $this->managedUsersQuery('', 'archive')->count();
+        $activeCount    = $this->managedUsersQuery('', 'active')->count();
+        $staffCount     = $this->managedUsersQuery('', null, 'staff')->count();
+        $internCount    = $this->managedUsersQuery('', null, 'interns')->count();
+        $phAdminCount   = $this->managedUsersQuery('', null, 'ph-admin')->count();
+        $hrSuperCount   = $this->managedUsersQuery('', null, 'hr-super-admin')->count();
+        $totalReports   = (int) DB::table('reports')
+            ->whereIn('status', ['pending', 'approved', 'for_revision'])
+            ->where('is_hidden_from_admin_dashboard', false)
+            ->count();
+        $pendingReports = (int) DB::table('reports')
+            ->where('status', 'pending')
+            ->where('is_hidden_from_admin_dashboard', false)
+            ->count();
 
         return [
             'title' => match ($mode) {
@@ -125,7 +137,7 @@ class AdminPortalService
             'stats' => [
                 [
                     'key'   => 'users',
-                    'label' => 'Users',
+                    'label' => 'Total Users',
                     'count' => $allUsersCount,
                     'meta'  => 'Registered accounts',
                     'tone'  => 'purple',
@@ -133,7 +145,7 @@ class AdminPortalService
                 ],
                 [
                     'key'   => 'archive',
-                    'label' => 'Archive',
+                    'label' => 'Archived Users',
                     'count' => $archiveCount,
                     'meta'  => 'Archived accounts',
                     'tone'  => 'yellow',
@@ -141,11 +153,62 @@ class AdminPortalService
                 ],
                 [
                     'key'   => 'active',
-                    'label' => 'Active',
+                    'label' => 'Active Users',
                     'count' => $activeCount,
                     'meta'  => 'Accessible accounts',
                     'tone'  => 'green',
                     'route' => route('dashboard.active'),
+                ],
+            ],
+            // Extra KPI cards for the dashboard overview
+            'kpiCards' => [
+                [
+                    'key'   => 'staff',
+                    'label' => 'Staff',
+                    'count' => $staffCount,
+                    'meta'  => 'Active staff members',
+                    'tone'  => 'blue',
+                    'icon'  => 'staff',
+                ],
+                [
+                    'key'   => 'interns',
+                    'label' => 'Interns',
+                    'count' => $internCount,
+                    'meta'  => 'On-the-job trainees',
+                    'tone'  => 'teal',
+                    'icon'  => 'intern',
+                ],
+                [
+                    'key'   => 'ph-admin',
+                    'label' => 'PH Admins',
+                    'count' => $phAdminCount,
+                    'meta'  => 'Provincial head admins',
+                    'tone'  => 'navy',
+                    'icon'  => 'admin',
+                ],
+                [
+                    'key'   => 'hr-super-admin',
+                    'label' => 'HR Super Admins',
+                    'count' => $hrSuperCount,
+                    'meta'  => 'Super admin accounts',
+                    'tone'  => 'rose',
+                    'icon'  => 'super',
+                ],
+                [
+                    'key'   => 'reports',
+                    'label' => 'Total Reports',
+                    'count' => $totalReports,
+                    'meta'  => 'All submitted reports',
+                    'tone'  => 'indigo',
+                    'icon'  => 'report',
+                ],
+                [
+                    'key'   => 'pending',
+                    'label' => 'Pending Reports',
+                    'count' => $pendingReports,
+                    'meta'  => 'Awaiting review',
+                    'tone'  => 'amber',
+                    'icon'  => 'pending',
                 ],
             ],
             'canManageUsers' => $this->authFlowService->canManageUsers($user->role),
@@ -286,6 +349,17 @@ class AdminPortalService
         $availableRoles = [];
         $availableActivities = [];
         [$dateFrom, $dateTo] = $this->auditDateFilterRange($dateFilter);
+        $isPHAdmin = $this->authFlowService->isAdminRole($user->role) && (string) $user->role === 'ph-admin';
+
+        // For ph-admin: collect only user_ids in the same office (staff + interns)
+        $officeUserIds = null;
+        if ($isPHAdmin && filled($user->office)) {
+            $officeUserIds = User::query()
+                ->whereIn('role', ['staff', 'interns'])
+                ->where('office', $user->office)
+                ->pluck('id')
+                ->all();
+        }
 
         if ($this->safeHasTable('activity_logs')) {
             try {
@@ -308,10 +382,15 @@ class AdminPortalService
                     : "COALESCE(users.role, '')";
 
                 $baseQuery = DB::table('activity_logs')
-                    ->leftJoin('users', 'users.id', '=', 'activity_logs.user_id');
+                    ->leftJoin('users', 'users.id', '=', 'activity_logs.user_id')
+                    ->when($officeUserIds !== null, function ($q) use ($officeUserIds) {
+                        // ph-admin: restrict to office staff/interns only
+                        $q->whereIn('activity_logs.user_id', $officeUserIds);
+                    });
 
                 $availableRoles = DB::table('activity_logs')
                     ->leftJoin('users', 'users.id', '=', 'activity_logs.user_id')
+                    ->when($officeUserIds !== null, fn ($q) => $q->whereIn('activity_logs.user_id', $officeUserIds))
                     ->selectRaw($roleExpression . ' as label')
                     ->distinct()
                     ->orderBy('label')
@@ -321,6 +400,7 @@ class AdminPortalService
                     ->all();
 
                 $availableActivities = DB::table('activity_logs')
+                    ->when($officeUserIds !== null, fn ($q) => $q->whereIn('user_id', $officeUserIds))
                     ->selectRaw($activityExpression . ' as action_name')
                     ->distinct()
                     ->orderBy('action_name')
@@ -465,6 +545,7 @@ class AdminPortalService
             'availableActivities' => $availableActivities,
             'summary' => $summary,
             'canAccessAudit' => true,
+            'isPHAdmin' => $isPHAdmin,
         ];
     }
 
@@ -816,6 +897,9 @@ class AdminPortalService
                 $query->where(function ($subQuery) use ($like) {
                     $subQuery
                         ->where('name', 'like', $like)
+                        ->orWhere('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) LIKE ?", [$like])
                         ->orWhere('email', 'like', $like)
                         ->orWhere('position', 'like', $like)
                         ->orWhere('project', 'like', $like)
@@ -825,6 +909,55 @@ class AdminPortalService
                         ->orWhere('institution', 'like', $like);
                 });
             });
+    }
+
+    /**
+     * Build user list scoped to a specific office (for ph-admin Users page).
+     */
+    public function buildOfficeUsersData(Request $request, User $adminUser): array
+    {
+        $search = trim((string) $request->query('search', ''));
+        $roleFilter = trim((string) $request->query('filter', ''));
+        $allowedRoles = ['staff' => 'Staff', 'interns' => 'Interns'];
+
+        if (!array_key_exists($roleFilter, $allowedRoles)) {
+            $roleFilter = '';
+        }
+
+        $users = User::query()
+            ->whereIn('role', ['staff', 'interns'])
+            ->where('office', $adminUser->office)
+            ->when($roleFilter !== '', fn ($q) => $q->where('role', $roleFilter))
+            ->when($search !== '', function ($q) use ($search) {
+                $like = '%' . $search . '%';
+                $q->where(function ($sub) use ($like) {
+                    $sub->where('name', 'like', $like)
+                        ->orWhere('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) LIKE ?", [$like])
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('position', 'like', $like);
+                });
+            })
+            ->orderBy('name')
+            ->get([
+                'id', 'name', 'first_name', 'middle_name', 'last_name',
+                'email', 'avatar_path', 'position', 'office', 'role', 'status',
+            ]);
+
+        return [
+            'title'          => 'Office Users',
+            'mode'           => 'office-users',
+            'user'           => $adminUser,
+            'search'         => $search,
+            'filter'         => $roleFilter,
+            'filterLabel'    => 'Role',
+            'filterOptions'  => $allowedRoles,
+            'users'          => $users,
+            'officeName'     => $adminUser->office ?: 'Your Office',
+            'canAccessAudit' => $this->authFlowService->canAccessAudit($adminUser->role),
+            'canManageUsers' => false,
+        ];
     }
 
     private function auditActionMeta(string $action): array

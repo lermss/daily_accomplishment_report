@@ -14,6 +14,7 @@ class ReportWorkflowService
 
     public function __construct(
         private readonly ProvincialHeadAssignmentService $provincialHeadAssignmentService,
+        private readonly SuperAdminNotificationService   $superAdminNotificationService,
     ) {
     }
 
@@ -79,6 +80,9 @@ class ReportWorkflowService
         $provincialHead = $this->provincialHeadAssignmentService->resolveProvincialHeadForStaff($staffUser);
 
         $report->submit($provincialHead->id);
+
+        // Notify the HR Super Admin via their notification centre.
+        $this->superAdminNotificationService->recordReportSubmission($report, $staffUser);
     }
 
     private function syncReportEntries(Report $report, array $validated): void

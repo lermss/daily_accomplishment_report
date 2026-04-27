@@ -126,8 +126,8 @@ class UserManagementController extends Controller
             return $user;
         }
 
-        // Managed user screens are rendered from the admin namespace.
-        return view('admin.dashboard', $this->adminPortalService->buildDashboardData($request, $user, $mode));
+        // Users screens now have their own dedicated view separate from the dashboard.
+        return view('admin.users', $this->adminPortalService->buildDashboardData($request, $user, $mode));
     }
 
     private function detailRules(array $selectedConfig): array
@@ -155,6 +155,17 @@ class UserManagementController extends Controller
             $validated['middle_name'] ?? null,
             $validated['last_name'] ?? null,
         ])->filter(fn ($part) => filled($part))->implode(' '));
+    }
+
+    public function officeUsers(Request $request): View|RedirectResponse
+    {
+        $user = $this->authenticatedUser($request);
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        return view('admin.ph-users', $this->adminPortalService->buildOfficeUsersData($request, $user));
     }
 
     private function authenticatedUser(Request $request, ?callable $guard = null): User|RedirectResponse
