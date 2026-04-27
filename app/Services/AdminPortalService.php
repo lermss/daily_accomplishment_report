@@ -479,10 +479,9 @@ class AdminPortalService
                     })
                     ->when($dateFrom, fn ($query, $from) => $query->where('activity_logs.created_at', '>=', $from))
                     ->when($dateTo, fn ($query, $to) => $query->where('activity_logs.created_at', '<=', $to))
-                    ->orderByDesc('activity_logs.created_at')
-                    ->limit(100);
+                    ->orderByDesc('activity_logs.created_at');
 
-                $logs = $query->get([
+                $selectColumns = [
                     'activity_logs.user_id',
                     'activity_logs.created_at',
                     'users.name as user_name',
@@ -493,7 +492,9 @@ class AdminPortalService
                     $hasDetailsColumn ? 'activity_logs.details' : DB::raw('NULL as details'),
                     $hasIpAddressColumn ? 'activity_logs.ip_address' : DB::raw('NULL as ip_address'),
                     $hasRoleColumn ? 'activity_logs.role' : DB::raw('NULL as role'),
-                ])->map(function ($log) {
+                ];
+
+                $logs = $query->paginate(20, $selectColumns)->through(function ($log) {
                     $action = (string) ($log->action ?? $log->event ?? 'activity');
                     $meta = $this->auditActionMeta($action);
                     $createdAt = $log->created_at ? Carbon::parse($log->created_at) : null;
@@ -518,16 +519,20 @@ class AdminPortalService
                     ];
                 });
             } catch (\Throwable) {
-                $logs = collect();
+                $logs = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
             }
         }
 
+        // Summary counts are computed from the full dataset (not paginated page) using targeted queries.
         $todayStart = now()->startOfDay();
+        $summaryBase = DB::table('activity_logs')
+            ->when($officeUserIds !== null, fn ($q) => $q->whereIn('user_id', $officeUserIds));
+
         $summary = [
-            'totalToday' => $logs->filter(fn ($log) => $log['created_at'] && $log['created_at']->gte($todayStart))->count(),
-            'successfulLogins' => $logs->where('action', 'login')->count(),
-            'profileUpdates' => $logs->where('action', 'profile_updated')->count(),
-            'warnings' => $logs->where('status_tone', 'warning')->count(),
+            'totalToday'      => (clone $summaryBase)->where('created_at', '>=', $todayStart)->count(),
+            'successfulLogins'=> (clone $summaryBase)->where('action', 'login')->count(),
+            'profileUpdates'  => (clone $summaryBase)->where('action', 'profile_updated')->count(),
+            'warnings'        => (clone $summaryBase)->whereIn('action', ['otp_abuse', 'failed_login', 'unauthorized'])->count(),
         ];
 
         return [

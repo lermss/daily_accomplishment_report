@@ -27,7 +27,7 @@
                     </div>
                     <div class="audit-hero-meta">
                         <span>Activity Monitor</span>
-                        <strong>{{ $logs->count() }} visible records</strong>
+                        <strong>{{ $logs->total() }} total records</strong>
                     </div>
                 </section>
 
@@ -125,7 +125,7 @@
                         </div>
                     </form>
 
-                    <div class="table-wrap">
+                    <div class="table-wrap audit-table-scroll">
                         <table class="audit-log-table">
                             <thead>
                                 <tr>
@@ -202,6 +202,36 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- Pagination --}}
+                    @if ($logs->hasPages())
+                        <div class="audit-pagination">
+                            <div class="audit-pagination-info">
+                                Showing {{ $logs->firstItem() }}–{{ $logs->lastItem() }} of {{ $logs->total() }} records
+                            </div>
+                            <div class="audit-pagination-links">
+                                @if ($logs->onFirstPage())
+                                    <span class="audit-page-btn audit-page-btn--disabled">&laquo;</span>
+                                @else
+                                    <a href="{{ $logs->previousPageUrl() }}" class="audit-page-btn">&laquo;</a>
+                                @endif
+
+                                @foreach ($logs->getUrlRange(max(1, $logs->currentPage() - 2), min($logs->lastPage(), $logs->currentPage() + 2)) as $page => $url)
+                                    @if ($page == $logs->currentPage())
+                                        <span class="audit-page-btn audit-page-btn--active">{{ $page }}</span>
+                                    @else
+                                        <a href="{{ $url }}" class="audit-page-btn">{{ $page }}</a>
+                                    @endif
+                                @endforeach
+
+                                @if ($logs->hasMorePages())
+                                    <a href="{{ $logs->nextPageUrl() }}" class="audit-page-btn">&raquo;</a>
+                                @else
+                                    <span class="audit-page-btn audit-page-btn--disabled">&raquo;</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </section>
             </section>
         </main>
