@@ -57,16 +57,16 @@ class StaffNotificationController extends Controller
         $reminderNotifications = $this->provincialReminderService->reminderNotificationsForStaff($user)
             ->map(function ($reminder) use ($user) {
                 return [
-                    'id' => 'reminder-' . $reminder->id,
-                    'entity_id' => $reminder->id,
-                    'type' => 'office_reminder',
-                    'status' => 'reminder',
-                    'message' => 'Office reminder from your Provincial Head',
-                    'comment' => $reminder->message,
-                    'file_name' => $user->office ?: 'Your office',
-                    'timestamp' => $reminder->triggered_at,
+                    'id'          => 'reminder-' . $reminder->id,
+                    'entity_id'   => $reminder->id,
+                    'type'        => 'office_reminder',
+                    'status'      => 'reminder',
+                    'message'     => $reminder->message ?: 'Reminder from your Provincial Head',
+                    'comment'     => null,
+                    'file_name'   => $reminder->message ?: 'Reminder from your Provincial Head',
+                    'timestamp'   => $reminder->triggered_at,
                     'reviewed_at' => $reminder->triggered_at?->format('M d, Y h:i A'),
-                    'route' => route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($user->role, 'dashboard')),
+                    'route'       => route(app(\App\Services\AuthFlowService::class)->staffPortalRoute($user->role, 'dashboard')),
                 ];
             });
 

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Report;
 use App\Models\ReportEntry;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class ReportWorkflowService
@@ -18,7 +18,7 @@ class ReportWorkflowService
     ) {
     }
 
-    public function staffReportsFor(?User $staffUser, string $searchTerm = ''): Collection
+    public function staffReportsFor(?User $staffUser, string $searchTerm = '', int $perPage = 10): LengthAwarePaginator
     {
         return Report::query()
             ->with('entries')
@@ -34,7 +34,8 @@ class ReportWorkflowService
                 });
             })
             ->latest()
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function createDraftReport(?User $staffUser, array $validated): Report

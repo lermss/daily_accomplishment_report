@@ -279,6 +279,85 @@
             gap: 12px;
         }
 
+        .reminder-timeline-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 8px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .reminder-timeline-scroll::-webkit-scrollbar { width: 6px; }
+        .reminder-timeline-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
+        .reminder-timeline-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+        .reminder-timeline-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ── PAGINATION ── */
+        .reports-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 14px 20px;
+            border-top: 1px solid #f1f5f9;
+            background: #fff;
+            border-radius: 0 0 16px 16px;
+        }
+        .reports-pagination__info {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .reports-pagination__links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .rp-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            color: #6b7280;
+            transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .rp-btn:hover {
+            background: #f0f5ff;
+            border-color: #a5b4fc;
+            color: #4338ca;
+        }
+        .rp-btn--active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            border-color: transparent;
+            color: #fff;
+            cursor: default;
+            box-shadow: 0 4px 12px rgba(79,70,229,.25);
+        }
+        .rp-btn--active:hover {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+        }
+        .rp-btn--disabled {
+            opacity: .35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        @media (max-width: 576px) {
+            .reports-pagination { flex-direction: column; align-items: flex-start; }
+        }
+
         @media (max-width: 1024px) {
             .admin-reminders-page .dashboard-content {
                 padding: 30px;
@@ -316,16 +395,6 @@
             <x-topbar active="reminders" :can-access-audit="$canAccessAudit" :user="$user" />
 
             <section class="dashboard-content">
-                <div class="flash-stack">
-                    @if (session('status'))
-                        <p class="flash-message flash-success">{{ session('status') }}</p>
-                    @endif
-
-                    @if ($errors->any())
-                        <p class="flash-message flash-error">{{ $errors->first() }}</p>
-                    @endif
-                </div>
-
                 <div class="page-intro">
                     <div>
                         <h1>Office Reminder Dashboard</h1>
@@ -391,7 +460,7 @@
 
                             <div class="reminder-field">
                                 <label for="daily_reminder_message">Reminder Message</label>
-                                <textarea id="daily_reminder_message" name="message" placeholder="Reminder: Please submit your accomplishment report.">{{ old('message', $schedule?->message) }}</textarea>
+                                <textarea id="daily_reminder_message" name="message" placeholder="Example: Please submit your accomplishment report.">{{ old('message', $schedule?->message) }}</textarea>
                             </div>
 
                             <div class="reminder-field">
@@ -442,12 +511,16 @@
                         </div>
                     </div>
 
-                    <div class="reminder-timeline">
+                    <div class="reminder-timeline-scroll">
                         @forelse ($recentReminders as $reminder)
                             <article class="reminder-timeline-item">
-                                <strong>{{ ucfirst($reminder->type) }} reminder</strong>
+                                <div class="reminder-timeline-item__head">
+                                    <span class="reminder-type-badge reminder-type-badge--{{ $reminder->type }}">
+                                        {{ $reminder->type === 'manual' ? 'Manual' : 'Scheduled' }}
+                                    </span>
+                                    <small>{{ $reminder->triggered_at?->format('M d, Y h:i A') ?? 'N/A' }}</small>
+                                </div>
                                 <p>{{ $reminder->message }}</p>
-                                <small>{{ $reminder->triggered_at?->format('M d, Y h:i A') ?? 'N/A' }}</small>
                             </article>
                         @empty
                             <article class="reminder-timeline-item">
@@ -456,8 +529,126 @@
                             </article>
                         @endforelse
                     </div>
+
+                    {{-- Pagination --}}
+                    @if ($recentReminders->hasPages())
+                        <div class="reports-pagination" style="margin-top:16px;">
+                            <div class="reports-pagination__info">
+                                Showing {{ $recentReminders->firstItem() }}–{{ $recentReminders->lastItem() }} of {{ $recentReminders->total() }} reminders
+                            </div>
+                            <div class="reports-pagination__links">
+                                @if ($recentReminders->onFirstPage())
+                                    <span class="rp-btn rp-btn--disabled">&laquo;</span>
+                                @else
+                                    <a href="{{ $recentReminders->previousPageUrl() }}" class="rp-btn">&laquo;</a>
+                                @endif
+                                @foreach ($recentReminders->getUrlRange(max(1,$recentReminders->currentPage()-2), min($recentReminders->lastPage(),$recentReminders->currentPage()+2)) as $page => $url)
+                                    @if ($page == $recentReminders->currentPage())
+                                        <span class="rp-btn rp-btn--active">{{ $page }}</span>
+                                    @else
+                                        <a href="{{ $url }}" class="rp-btn">{{ $page }}</a>
+                                    @endif
+                                @endforeach
+                                @if ($recentReminders->hasMorePages())
+                                    <a href="{{ $recentReminders->nextPageUrl() }}" class="rp-btn">&raquo;</a>
+                                @else
+                                    <span class="rp-btn rp-btn--disabled">&raquo;</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </section>
             </section>
         </main>
     </div>
-@endsection
+@push('scripts')
+<script src="{{ asset('js/toast-notification.js') }}" defer></script>
+@if (session('status'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const msg = @json(session('status'));
+        const errMsg = @json($errors->first());
+
+        if (msg) {
+            // Build toast manually for full control over position/style
+            const toast = document.createElement('div');
+            toast.id = 'reminderToast';
+            toast.innerHTML = `
+                <span style="font-size:1.2rem;">&#10003;</span>
+                <span style="flex:1;">${msg}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.6;color:inherit;" aria-label="Dismiss">&times;</button>
+            `;
+            Object.assign(toast.style, {
+                position:       'fixed',
+                bottom:         '28px',
+                right:          '28px',
+                zIndex:         '9999',
+                display:        'flex',
+                alignItems:     'center',
+                gap:            '12px',
+                padding:        '14px 20px',
+                borderRadius:   '14px',
+                background:     'linear-gradient(135deg,#1e7f4e,#25a163)',
+                color:          '#fff',
+                fontFamily:     "'Poppins',sans-serif",
+                fontSize:       '.88rem',
+                fontWeight:     '500',
+                boxShadow:      '0 8px 32px rgba(30,127,78,.35)',
+                minWidth:       '260px',
+                maxWidth:       '380px',
+                animation:      'toastSlideIn .35s cubic-bezier(.22,1,.36,1)',
+                borderLeft:     '4px solid #0d6e3c',
+            });
+            document.body.appendChild(toast);
+
+            // Auto-dismiss after 4 s
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut .3s ease forwards';
+                setTimeout(() => toast.remove(), 320);
+            }, 4000);
+        }
+
+        if (errMsg) {
+            const errToast = document.createElement('div');
+            errToast.innerHTML = `
+                <span style="font-size:1.2rem;">&#10007;</span>
+                <span style="flex:1;">${errMsg}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.6;color:inherit;" aria-label="Dismiss">&times;</button>
+            `;
+            Object.assign(errToast.style, {
+                position:       'fixed',
+                bottom:         '28px',
+                right:          '28px',
+                zIndex:         '9999',
+                display:        'flex',
+                alignItems:     'center',
+                gap:            '12px',
+                padding:        '14px 20px',
+                borderRadius:   '14px',
+                background:     'linear-gradient(135deg,#b91c1c,#dc2626)',
+                color:          '#fff',
+                fontFamily:     "'Poppins',sans-serif",
+                fontSize:       '.88rem',
+                fontWeight:     '500',
+                boxShadow:      '0 8px 32px rgba(185,28,28,.35)',
+                minWidth:       '260px',
+                maxWidth:       '380px',
+                borderLeft:     '4px solid #7f1d1d',
+            });
+            document.body.appendChild(errToast);
+            setTimeout(() => errToast.remove(), 5000);
+        }
+    });
+</script>
+<style>
+    @keyframes toastSlideIn {
+        from { opacity: 0; transform: translateY(24px) scale(.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastSlideOut {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to   { opacity: 0; transform: translateY(16px) scale(.96); }
+    }
+</style>
+@endif
+@endpush

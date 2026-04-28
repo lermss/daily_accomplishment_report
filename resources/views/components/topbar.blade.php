@@ -9,9 +9,7 @@
     <nav class="nav-right" aria-label="Primary">
         <a href="{{ route('dashboard.home') }}" class="{{ $active === 'home' ? 'active' : '' }}">Home</a>
         <a href="{{ route('dashboard') }}" class="{{ $active === 'dashboard' ? 'active' : '' }}">Dashboard</a>
-        @if ($isAdminNavigation)
-            <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
-        @elseif ($isSuperAdminNavigation)
+        @if ($isSuperAdminNavigation)
             <a href="{{ $reportsRoute }}" class="{{ $active === 'reports' ? 'active' : '' }}">Reports</a>
         @endif
         @if ($canManageReminders)
@@ -40,6 +38,8 @@
                     <span class="notification-badge">{{ $superAdminUnreadCount > 99 ? '99+' : $superAdminUnreadCount }}</span>
                 @elseif ($canViewNotifications && $pendingNotificationsCount > 0)
                     <span class="notification-badge">{{ $pendingNotificationsCount > 99 ? '99+' : $pendingNotificationsCount }}</span>
+                @elseif ($isStaffNavigation && $staffUnreadCount > 0)
+                    <span class="notification-badge">{{ $staffUnreadCount > 99 ? '99+' : $staffUnreadCount }}</span>
                 @endif
             </button>
 
@@ -76,6 +76,39 @@
                                                 <a href="{{ $notification->action_url }}">{{ $notification->action_label ?: 'View Details' }}</a>
                                             </span>
                                         @endif
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                @elseif ($isStaffNavigation)
+                    {{-- ── Staff / Intern notification panel ──── --}}
+                    @if ($staffNotifications->isEmpty())
+                        <p class="notification-empty">No new notifications yet. Reminders and report reviews will appear here.</p>
+                    @else
+                        <div class="notification-list">
+                            @foreach ($staffNotifications as $notif)
+                                <div class="notification-item {{ $notif->type === 'office_reminder' ? 'notification-item--reminder' : ($notif->status === 'approved' ? 'notification-item--approved' : 'notification-item--revision') }}">
+                                    <span class="notification-indicator" aria-hidden="true"></span>
+                                    <span class="notification-copy">
+                                        <span class="notification-icon-label">
+                                            @if ($notif->type === 'office_reminder')
+                                                🔔
+                                            @elseif ($notif->status === 'approved')
+                                                ✅
+                                            @else
+                                                🔄
+                                            @endif
+                                            <span class="notification-title">{{ $notif->title }}</span>
+                                        </span>
+                                        <span class="notification-description">{{ $notif->message }}</span>
+                                        @if ($notif->comment)
+                                            <span class="notification-comment">{{ $notif->comment }}</span>
+                                        @endif
+                                        <span class="notification-meta">
+                                            <small>{{ $notif->time_label }}</small>
+                                            <span class="notification-status notification-status--{{ $notif->type === 'office_reminder' ? 'reminder' : $notif->status }}">{{ $notif->type === 'office_reminder' ? 'Reminder' : ucfirst(str_replace('_',' ',$notif->status)) }}</span>
+                                        </span>
                                     </span>
                                 </div>
                             @endforeach

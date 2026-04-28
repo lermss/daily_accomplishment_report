@@ -107,23 +107,31 @@
                 </div>
                 <div class="notification-panel-body" id="staffNotificationsList">
                     @forelse ($staffNotifications as $notification)
-                        <a href="{{ $notification->route ?: route($staffPortalPrefix . '.dashboard') }}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="{{ $notification->id }}">
+                        <a href="{{ $notification->route ?: route($staffPortalPrefix . '.dashboard') }}"
+                           class="notification-item {{ $notification->status === 'reminder' ? 'notification-item--reminder' : ($notification->status === \App\Models\Report::STATUS_APPROVED ? 'notification-item--approved' : 'notification-item--revision') }} staff-notification-item-link"
+                           data-notification-id="{{ $notification->id }}">
                             <span class="notification-indicator" aria-hidden="true"></span>
                             <span class="notification-copy">
                                 <span class="notification-title">
-                                    {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Your report has been approved' : ($notification->status === \App\Models\Report::STATUS_FOR_REVISION ? 'Your report needs revision' : 'Office reminder from your Provincial Head') }}
+                                    @if ($notification->status === 'reminder')
+                                        🔔 Office Reminder
+                                    @elseif ($notification->status === \App\Models\Report::STATUS_APPROVED)
+                                        ✅ Report Approved
+                                    @else
+                                        🔄 Needs Revision
+                                    @endif
                                 </span>
-                                <span class="notification-description">{{ $notification->file_name ?: 'Untitled report' }}</span>
+                                <span class="notification-description">{{ $notification->file_name ?: 'Untitled' }}</span>
                                 <span class="notification-meta">
                                     <small>{{ optional($notification->reviewed_at)->format('M d, Y h:i A') }}</small>
-                                    <span class="notification-status {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'notification-status--success' : 'notification-status--warning' }}">
-                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : ($notification->status === \App\Models\Report::STATUS_FOR_REVISION ? 'Needs Revision' : 'Reminder') }}
+                                    <span class="notification-status {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'notification-status--success' : ($notification->status === 'reminder' ? 'notification-status--reminder' : 'notification-status--warning') }}">
+                                        {{ $notification->status === \App\Models\Report::STATUS_APPROVED ? 'Approved' : ($notification->status === 'reminder' ? 'Reminder' : 'Needs Revision') }}
                                     </span>
                                 </span>
                             </span>
                         </a>
                     @empty
-                        <p class="notification-empty" id="staffNotificationsEmpty">No report notifications yet.</p>
+                        <p class="notification-empty" id="staffNotificationsEmpty">No notifications yet.</p>
                     @endforelse
                 </div>
             </div>
@@ -170,18 +178,35 @@
             }
 
             notificationsList.innerHTML = notifications.map((notification) => {
-                const statusClass = notification.status === 'approved' ? 'notification-status--success' : 'notification-status--warning';
-                const statusLabel = notification.status === 'approved' ? 'Approved' : 'Needs Revision';
-                const reviewedAt = notification.reviewed_at ? `<small>${notification.reviewed_at}</small>` : '<small>Just now</small>';
+                const isApproved  = notification.status === 'approved';
+                const isReminder  = notification.status === 'reminder' || notification.type === 'office_reminder';
+                const isRevision  = !isApproved && !isReminder;
+
+                const itemClass   = isReminder ? 'notification-item--reminder'
+                                  : isApproved ? 'notification-item--approved'
+                                  : 'notification-item--revision';
+                const statusClass = isApproved  ? 'notification-status--success'
+                                  : isReminder  ? 'notification-status--reminder'
+                                  : 'notification-status--warning';
+                const statusLabel = isApproved  ? 'Approved'
+                                  : isReminder  ? 'Reminder'
+                                  : 'Needs Revision';
+                const titleIcon   = isReminder  ? '🔔 Office Reminder'
+                                  : isApproved  ? '✅ Report Approved'
+                                  : '🔄 Needs Revision';
+                const description = isReminder
+                                  ? (notification.message || 'Reminder from your Provincial Head')
+                                  : (notification.file_name || 'Untitled report');
+                const timeLabel   = notification.reviewed_at ? `<small>${notification.reviewed_at}</small>` : '<small>Just now</small>';
 
                 return `
-                    <a href="${notification.route}" class="notification-item notification-item--unread staff-notification-item-link" data-notification-id="${notification.id}">
+                    <a href="${notification.route || '#'}" class="notification-item ${itemClass} staff-notification-item-link" data-notification-id="${notification.id}">
                         <span class="notification-indicator" aria-hidden="true"></span>
                         <span class="notification-copy">
-                            <span class="notification-title">${notification.message}</span>
-                            <span class="notification-description">${notification.file_name || 'Untitled report'}</span>
+                            <span class="notification-title">${titleIcon}</span>
+                            <span class="notification-description">${description}</span>
                             <span class="notification-meta">
-                                ${reviewedAt}
+                                ${timeLabel}
                                 <span class="notification-status ${statusClass}">${statusLabel}</span>
                             </span>
                         </span>

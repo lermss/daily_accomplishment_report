@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\OfficeReminder;
 use App\Models\OfficeReminderSchedule;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +33,15 @@ class ProvincialReminderService
             ->orderByDesc('triggered_at')
             ->limit($limit)
             ->get();
+    }
+
+    public function recentRemindersForOfficePaginated(?string $office, int $perPage = 5, ?Request $request = null): LengthAwarePaginator
+    {
+        $query = OfficeReminder::query()
+            ->where('office', $office ?? '')
+            ->orderByDesc('triggered_at');
+
+        return $query->paginate($perPage)->appends($request?->except('page') ?? []);
     }
 
     public function saveDailySchedule(User $user, array $validated): OfficeReminderSchedule

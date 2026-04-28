@@ -196,6 +196,89 @@
         transform: none !important;
         box-shadow: 0 8px 32px rgba(10, 63, 114, 0.28) !important;
     }
+
+    /* ── SCROLLABLE TABLE ── */
+    .admin-reports-page .table-wrap--scrollable {
+        max-height: 480px;
+        overflow-y: auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .admin-reports-page .table-wrap--scrollable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        box-shadow: 0 2px 4px rgba(0,0,0,.04);
+    }
+    .admin-reports-page .table-wrap--scrollable::-webkit-scrollbar { width: 6px; height: 6px; }
+    .admin-reports-page .table-wrap--scrollable::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
+    .admin-reports-page .table-wrap--scrollable::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    .admin-reports-page .table-wrap--scrollable::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* ── PAGINATION ── */
+    .admin-reports-page .staff-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+    .admin-reports-page .staff-pagination__info {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    .admin-reports-page .staff-pagination__links {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .admin-reports-page .sp-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        color: #6b7280;
+        transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .admin-reports-page .sp-btn:hover {
+        background: #f0f5ff;
+        border-color: #a5b4fc;
+        color: #4338ca;
+    }
+    .admin-reports-page .sp-btn--active {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        border-color: transparent;
+        color: #fff;
+        cursor: default;
+        box-shadow: 0 4px 12px rgba(79,70,229,.25);
+    }
+    .admin-reports-page .sp-btn--active:hover {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #fff;
+    }
+    .admin-reports-page .sp-btn--disabled {
+        opacity: .35;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    @media (max-width: 576px) {
+        .admin-reports-page .staff-pagination { flex-direction: column; align-items: flex-start; }
+    }
 </style>
 
 
@@ -207,7 +290,7 @@
                     <div class="summary-copy">
                         <span class="summary-label">Total Reports</span>
                         <div class="summary-value-row">
-                            <strong>{{ $reports->count() }}</strong>
+                            <strong>{{ $reports->total() }}</strong>
                             <span>Reports</span>
                         </div>
                         <span class="summary-meta">
@@ -216,7 +299,7 @@
                     </div>
                     <a href="{{ route($staffRouteBase . '.reports.create') }}" class="action-button" aria-label="Add new report">
                         <svg viewBox="0 0 24 24"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>
-                        <span>Add Report</span>
+                        <span>Submit Report</span>
                     </a>
                 </article>
             </div>
@@ -251,7 +334,7 @@
                 </div>
             </div>
 
-            <div class="table-wrap">
+            <div class="table-wrap table-wrap--scrollable">
                 @forelse($reports as $report)
                     @if ($loop->first)
                     <table>
@@ -350,6 +433,34 @@
                     </table>
                 @endforelse
             </div>
+
+            {{-- Pagination --}}
+            @if ($reports->hasPages())
+                <div class="staff-pagination">
+                    <div class="staff-pagination__info">
+                        Showing {{ $reports->firstItem() }}–{{ $reports->lastItem() }} of {{ $reports->total() }} reports
+                    </div>
+                    <div class="staff-pagination__links">
+                        @if ($reports->onFirstPage())
+                            <span class="sp-btn sp-btn--disabled">&laquo;</span>
+                        @else
+                            <a href="{{ $reports->previousPageUrl() }}" class="sp-btn">&laquo;</a>
+                        @endif
+                        @foreach ($reports->getUrlRange(max(1,$reports->currentPage()-2), min($reports->lastPage(),$reports->currentPage()+2)) as $page => $url)
+                            @if ($page == $reports->currentPage())
+                                <span class="sp-btn sp-btn--active">{{ $page }}</span>
+                            @else
+                                <a href="{{ $url }}" class="sp-btn">{{ $page }}</a>
+                            @endif
+                        @endforeach
+                        @if ($reports->hasMorePages())
+                            <a href="{{ $reports->nextPageUrl() }}" class="sp-btn">&raquo;</a>
+                        @else
+                            <span class="sp-btn sp-btn--disabled">&raquo;</span>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </section>
     </div>
 </div>

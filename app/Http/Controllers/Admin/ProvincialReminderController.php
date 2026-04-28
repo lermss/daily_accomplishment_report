@@ -28,13 +28,15 @@ class ProvincialReminderController extends Controller
 
         $this->provincialReminderService->dispatchDueReminders($user->office);
         $schedule = $this->provincialReminderService->scheduleForUser($user);
+        $recentReminders = $this->provincialReminderService->recentRemindersForOfficePaginated($user->office, 5, $request);
 
         return view('admin.reminders', [
-            'title' => 'Office Reminders',
-            'user' => $user,
-            'canAccessAudit' => $this->authFlowService->canAccessAudit($user->role),
-            'schedule' => $schedule,
-            'recentReminders' => $this->provincialReminderService->recentRemindersForOffice($user->office),
+            'title'               => 'Office Reminders',
+            'user'                => $user,
+            'canAccessAudit'      => $this->authFlowService->canAccessAudit($user->role),
+            'schedule'            => $schedule,
+            'recentReminders'     => $recentReminders,
+            'recentReminderCount' => $recentReminders->total(),
         ]);
     }
 

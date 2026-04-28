@@ -28,22 +28,30 @@
                         <div class="super-admin-view-banner">You are currently viewing the dashboard as a super admin. Report files are not accessible in this view.</div>
                     @endif
 
-                    <div class="report-filters-row">
-                        <div class="filters-left">
-                            <div class="search-form report-search-form">
-                                <input type="search" name="search" value="{{ $search }}" placeholder="Search by staff name, file name, or status" aria-label="Search reports" data-report-search>
-                                <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.87 10.59l4.27 4.27a1 1 0 0 0 1.42-1.42l-4.27-4.27A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1-4 4 4 4 0 0 1 4-4Z"/></svg></button>
+                    <form method="GET" action="{{ url()->current() }}" id="reportFilterFormSA">
+                        <div class="report-filters-row">
+                            <div class="filters-left">
+                                <div class="search-form report-search-form">
+                                    <input type="search" name="search" value="{{ $search }}"
+                                           placeholder="Search by staff name, file name, or status"
+                                           aria-label="Search reports" data-report-search>
+                                    <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.87 10.59l4.27 4.27a1 1 0 0 0 1.42-1.42l-4.27-4.27A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1-4 4 4 4 0 0 1 4-4Z"/></svg></button>
+                                </div>
+                                <select name="status_filter" class="status-select" aria-label="Filter by status"
+                                        data-status-filter onchange="this.form.submit()">
+                                    @foreach ($statusFilterOptions as $filterValue => $filterLabel)
+                                        <option value="{{ $filterValue }}" {{ $statusFilter === $filterValue ? 'selected' : '' }}>{{ $filterLabel }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <select name="status_filter" class="status-select" aria-label="Filter by status" data-status-filter>
-                                @foreach ($statusFilterOptions as $filterValue => $filterLabel)
-                                    <option value="{{ $filterValue }}" {{ $statusFilter === $filterValue ? 'selected' : '' }}>{{ $filterLabel }}</option>
-                                @endforeach
-                            </select>
+                            <div class="results-summary" data-results-summary>
+                                <strong>{{ $reports->total() }}</strong>
+                                {{ $reports->total() === 1 ? 'report' : 'reports' }} in scope
+                            </div>
                         </div>
-                        <div class="results-summary" data-results-summary><strong>{{ $reports->count() }}</strong> visible {{ $reports->count() === 1 ? 'report' : 'reports' }}</div>
-                    </div>
+                    </form>
 
-                    <div class="table-wrap">
+                    <div class="table-wrap table-wrap--scrollable">
                         <table>
                             <thead><tr><th>Name</th><th>Filename</th><th>Date Submitted</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody data-reports-body>
@@ -91,6 +99,34 @@
                         </table>
                     </div>
                 </section>
+
+                    {{-- Pagination --}}
+                    @if ($reports->hasPages())
+                        <div class="reports-pagination">
+                            <div class="reports-pagination__info">
+                                Showing {{ $reports->firstItem() }}–{{ $reports->lastItem() }} of {{ $reports->total() }} reports
+                            </div>
+                            <div class="reports-pagination__links">
+                                @if ($reports->onFirstPage())
+                                    <span class="rp-btn rp-btn--disabled">&laquo;</span>
+                                @else
+                                    <a href="{{ $reports->previousPageUrl() }}" class="rp-btn">&laquo;</a>
+                                @endif
+                                @foreach ($reports->getUrlRange(max(1, $reports->currentPage()-2), min($reports->lastPage(), $reports->currentPage()+2)) as $page => $url)
+                                    @if ($page == $reports->currentPage())
+                                        <span class="rp-btn rp-btn--active">{{ $page }}</span>
+                                    @else
+                                        <a href="{{ $url }}" class="rp-btn">{{ $page }}</a>
+                                    @endif
+                                @endforeach
+                                @if ($reports->hasMorePages())
+                                    <a href="{{ $reports->nextPageUrl() }}" class="rp-btn">&raquo;</a>
+                                @else
+                                    <span class="rp-btn rp-btn--disabled">&raquo;</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
             </section>
         </main>
     </div>

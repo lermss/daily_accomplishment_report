@@ -274,8 +274,8 @@ class AdminPortalService
                 });
             })
             ->orderByRaw('COALESCE(submitted_at, created_at) DESC')
-            ->get()
-            ->map(function (Report $report) {
+            ->paginate(15)
+            ->through(function (Report $report) {
                 $report->setAttribute('user_name', $report->user?->name);
                 $report->setAttribute('user_avatar_path', $report->user?->avatar_path);
                 $report->setAttribute('user_signature_path', $report->user?->signature_path);
@@ -288,7 +288,8 @@ class AdminPortalService
                 );
 
                 return $report;
-            });
+            })
+            ->appends($request->except('page'));
 
         $counts = $this->reportSummaryCounts($user);
         $latestApprovedAt = $this->adminReportsQuery($user, '', 'approved')->max('reports.reviewed_at');

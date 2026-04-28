@@ -290,12 +290,12 @@
                             <td>
                                @if(in_array($report->status, ['approved', 'draft'], true))
                                  @if($report->status === 'approved')
-                                   <button type="button" class="export-btn" data-export-pdf-url="{{ route($staffRouteBase . '.reports.pdf', $report) }}">ExportPDF</button>
+                                   <button type="button" class="export-btn" data-export-pdf-url="{{ route($staffRouteBase . '.reports.pdf', $report) }}">Export PDF</button>
                                  @else
-                                   <a href="{{ route($staffRouteBase . '.reports.pdf', $report) }}" class="export-btn">ExportPDF</a>
+                                   <a href="{{ route($staffRouteBase . '.reports.pdf', $report) }}" class="export-btn">Export PDF</a>
                                  @endif
                                 @else
-                              <button class="export-btn" disabled title="Export is only available for approved or draft reports">ExportPDF</button>
+                              <button class="export-btn" disabled title="Export is only available for approved or draft reports">Export PDF</button>
                                 @endif
                             </td>
                         </tr>

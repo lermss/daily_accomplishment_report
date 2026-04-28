@@ -1279,3 +1279,99 @@ button[disabled] {
         width: 100%;
     }
 }
+
+/* -- Scrollable report table --------------------------------------- */
+.table-wrap--scrollable {
+    max-height: 480px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.table-wrap--scrollable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #1a2f50;
+    box-shadow: 0 2px 0 rgba(255,255,255,0.06);
+}
+
+.table-wrap--scrollable::-webkit-scrollbar { width: 5px; height: 5px; }
+.table-wrap--scrollable::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 99px; }
+.table-wrap--scrollable::-webkit-scrollbar-thumb { background: rgba(79,124,255,0.4); border-radius: 99px; }
+.table-wrap--scrollable::-webkit-scrollbar-thumb:hover { background: rgba(79,124,255,0.7); }
+
+/* -- Pagination bar ------------------------------------------------ */
+.reports-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 12px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+}
+
+.reports-pagination__info {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.reports-pagination__links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.rp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #94a3b8;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.rp-btn:hover {
+    background: rgba(79,124,255,0.2);
+    border-color: rgba(79,124,255,0.4);
+    color: #e2e8f0;
+}
+
+.rp-btn--active {
+    background: linear-gradient(135deg, #4f7cff, #6c63ff);
+    border-color: transparent;
+    color: #fff;
+    cursor: default;
+    box-shadow: 0 4px 12px rgba(79,124,255,0.3);
+}
+
+.rp-btn--active:hover {
+    background: linear-gradient(135deg, #4f7cff, #6c63ff);
+    color: #fff;
+}
+
+.rp-btn--disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+@media (max-width: 600px) {
+    .reports-pagination { flex-direction: column; align-items: flex-start; }
+}
