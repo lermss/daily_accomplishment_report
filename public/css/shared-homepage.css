@@ -1,0 +1,335 @@
+/* =========================================================
+   Shared Homepage Theme
+   ---------------------------------------------------------
+   This stylesheet powers the shared homepage sections used by
+   the unified home page:
+   - hero block
+   - call-to-action button
+   - hero image panel
+   - feature cards
+
+   Safe editing guide:
+   - Width / layout: edit `.shared-homepage`, `.hero`, `.features`
+   - Height / spacing: edit padding, gap, min-height values
+   - Typography: edit heading / paragraph font sizes
+   - Colors: use the variables in `.shared-homepage`
+   - Shape: adjust border-radius values
+   ========================================================= */
+
+.shared-homepage {
+    /* -----------------------------------------------------
+       Local variables scoped only to the shared homepage
+       ----------------------------------------------------- */
+    --shared-homepage-bg: #f4f6f9;
+    --shared-homepage-surface: #ffffff;
+    --shared-homepage-surface-soft: #eef5fb;
+    --shared-homepage-surface-card: #edf5ff;
+
+    --shared-homepage-text-strong: #1f4e79;
+    --shared-homepage-text-body: #48657f;
+    --shared-homepage-text-muted: #4b6073;
+
+    --shared-homepage-accent: #1f4e79;
+    --shared-homepage-accent-dark: #163a59;
+
+    --shared-homepage-border-soft: rgba(31, 78, 121, 0.08);
+    --shared-homepage-shadow-hero: 0 24px 60px rgba(31, 78, 121, 0.08);
+    --shared-homepage-shadow-card: 0 14px 30px rgba(15, 23, 42, 0.06);
+    --shared-homepage-shadow-image: 0 24px 50px rgba(0, 0, 0, 0.14);
+    --shared-homepage-shadow-button: 0 5px 15px rgba(0, 0, 0, 0.2);
+    --shared-homepage-shadow-button-hover: 0 10px 25px rgba(0, 0, 0, 0.3);
+
+    --shared-homepage-radius-hero: 32px;
+    --shared-homepage-radius-image: 10px;
+    --shared-homepage-radius-card: 24px;
+    --shared-homepage-radius-button: 50px;
+
+    --shared-homepage-section-padding: 0 0 40px;
+    --shared-homepage-hero-padding: clamp(44px, 6vw, 88px);
+    --shared-homepage-feature-padding: 40px 30px;
+    --shared-homepage-gap-hero: clamp(32px, 5vw, 72px);
+    --shared-homepage-gap-features: 30px;
+
+    background: var(--shared-homepage-bg);
+    padding: var(--shared-homepage-section-padding);
+    font-family: "Poppins", sans-serif;
+}
+
+/* =========================================================
+   Admin Homepage Navbar Position
+   ---------------------------------------------------------
+   Slightly reduce the top spacing on the admin homepage so
+   the navbar sits a bit higher without affecting staff pages.
+   Adjust `padding-top` here if you want it higher or lower.
+   ========================================================= */
+/* No extra top padding needed — navbar is in normal document flow */
+
+.shared-homepage *,
+.shared-homepage *::before,
+.shared-homepage *::after {
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   Hero Layout
+   ---------------------------------------------------------
+   Adjust hero width, padding, and two-column balance here.
+   ========================================================= */
+.shared-homepage .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--shared-homepage-gap-hero);
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: var(--shared-homepage-hero-padding) clamp(20px, 4vw, 56px);
+    border-radius: 0;
+    color: var(--shared-homepage-text-strong);
+    background:
+        radial-gradient(circle at top left, rgba(31, 78, 121, 0.08), transparent 34%),
+        linear-gradient(135deg, var(--shared-homepage-surface), var(--shared-homepage-surface-soft));
+    box-shadow: none;
+}
+
+.shared-homepage .hero-text {
+    max-width: 720px;
+}
+
+/* =========================================================
+   Hero Typography
+   ---------------------------------------------------------
+   Adjust heading and paragraph sizes here.
+   ========================================================= */
+.shared-homepage .hero-text h1 {
+    margin-bottom: 20px;
+    font-size: clamp(3rem, 2vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+    color: var(--shared-homepage-text-strong);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: shared-homepage-fade-in-up 1s forwards;
+}
+
+.shared-homepage .hero-text p {
+    max-width: 70ch;
+    margin-bottom: 45px;
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    line-height: 1.75;
+    color: var(--shared-homepage-text-body);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: shared-homepage-fade-in-up 1.2s forwards;
+}
+
+@keyframes shared-homepage-fade-in-up {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================================
+   Hero Button
+   ---------------------------------------------------------
+   Change button width, padding, colors, and hover motion here.
+   ========================================================= */
+.shared-homepage .hero-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 124px;
+    padding: 16px 34px;
+    border-radius: var(--shared-homepage-radius-button);
+    background: var(--shared-homepage-accent);
+    color: #ffffff;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: var(--shared-homepage-shadow-button);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: shared-homepage-fade-in-up 1.4s forwards;
+    transition: all 0.4s ease;
+}
+
+.shared-homepage .hero-button:hover {
+    background: var(--shared-homepage-accent-dark);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shared-homepage-shadow-button-hover);
+}
+
+.shared-homepage .hero-button i {
+    font-size: 1rem;
+}
+
+/* =========================================================
+   Hero Image
+   ---------------------------------------------------------
+   Adjust image size, min-height, radius, and hover effect here.
+   ========================================================= */
+.shared-homepage .hero-image {
+    position: relative;
+    overflow: hidden;
+    min-width: 300px;
+    min-height: 220px;
+    border-radius: var(--shared-homepage-radius-image);
+    perspective: 1000px;
+}
+
+.shared-homepage .hero-image img {
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    object-fit: contain;
+    border-radius: var(--shared-homepage-radius-image);
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.18));
+    transition: transform 0.5s ease, filter 0.5s ease;
+}
+
+.shared-homepage .hero-image:hover img {
+    transform: rotateY(10deg) scale(1.05);
+    filter: brightness(1);
+}
+
+/* =========================================================
+   Feature Cards
+   ---------------------------------------------------------
+   Adjust grid columns, card height, card padding, and text
+   spacing here.
+   ========================================================= */
+.shared-homepage .features {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--shared-homepage-gap-features);
+    max-width: 1400px;
+    margin: 32px auto 0;
+    padding: 0 clamp(20px, 4vw, 56px);
+}
+
+.shared-homepage .feature-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 240px;
+    padding: var(--shared-homepage-feature-padding);
+    border: 1px solid var(--shared-homepage-border-soft);
+    border-radius: var(--shared-homepage-radius-card);
+    background: linear-gradient(160deg, var(--shared-homepage-surface), var(--shared-homepage-surface-card));
+    text-align: left;
+    cursor: pointer;
+    box-shadow: var(--shared-homepage-shadow-card);
+    transition: all 0.4s ease;
+}
+
+.shared-homepage .feature-card i {
+    margin-bottom: 22px;
+    font-size: 2.6rem;
+    color: var(--shared-homepage-text-strong);
+}
+
+.shared-homepage .feature-card h4 {
+    margin-bottom: 14px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--shared-homepage-text-strong);
+}
+
+.shared-homepage .feature-card p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--shared-homepage-text-muted);
+}
+
+.shared-homepage .feature-card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 221, 0, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.6s ease;
+}
+
+.shared-homepage .feature-card:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.shared-homepage .feature-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================================
+   Responsive
+   ---------------------------------------------------------
+   Tablet and mobile adjustments for spacing and stacking.
+   ========================================================= */
+@media (max-width: 1200px) {
+    .shared-homepage .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1000px) {
+    .shared-homepage .hero {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 40px clamp(20px, 4vw, 40px);
+        text-align: center;
+    }
+
+    .shared-homepage .hero-text,
+    .shared-homepage .hero-image {
+        max-width: none;
+    }
+
+    .shared-homepage .hero-text h1 {
+        font-size: clamp(2rem, 6vw, 3rem);
+    }
+
+    .shared-homepage .features {
+        grid-template-columns: 1fr;
+        margin-top: 24px;
+    }
+
+    .shared-homepage .feature-card {
+        min-height: 0;
+        text-align: center;
+    }
+
+    .shared-homepage .hero-image img {
+        max-height: 260px;
+    }
+}
+
+@media (max-width: 640px) {
+    .shared-homepage {
+        --shared-homepage-section-padding: 0 0 24px;
+        --shared-homepage-feature-padding: 26px 20px;
+    }
+
+    .shared-homepage .hero {
+        gap: 22px;
+        padding: 28px 16px;
+    }
+
+    .shared-homepage .hero-text p {
+        margin-bottom: 24px;
+        line-height: 1.6;
+    }
+
+    .shared-homepage .hero-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
